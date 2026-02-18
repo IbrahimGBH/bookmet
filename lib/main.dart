@@ -1,30 +1,66 @@
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const BookmetApp());
+// void main() {
+//   runApp(const BookmetApp());
+// }
+
+// class BookmetApp extends StatelessWidget {
+//   const BookmetApp({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'Bookmet Marketplace',
+//       debugShowCheckedModeBanner: false,
+//       theme: ThemeData(
+//         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+//         useMaterial3: true,
+//       ),
+//       home: const Scaffold(
+//         body: Center(
+//           child: Text(
+//             'Hito 1: Bookmet Configurado\nListo para desarrollo',
+//             textAlign: TextAlign.center,
+//             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; 
+import 'firebase_options.dart'; 
+import 'registrarse.dart'; 
+
+void main() async {
+  
+  WidgetsFlutterBinding.ensureInitialized();
+  
+
+   await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  
+  runApp(const MyApp());
 }
 
-class BookmetApp extends StatelessWidget {
-  const BookmetApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Bookmet Marketplace',
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false, 
+      title: 'BookMet',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+        primarySwatch: Colors.orange, 
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'Hito 1: Bookmet Configurado\nListo para desarrollo',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+
+      home: const PagRegistro(), 
     );
   }
 }

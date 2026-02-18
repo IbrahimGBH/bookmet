@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "38535991187",
+    "project_id": "bookmet-c7831",
+    "storage_bucket": "bookmet-c7831.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:38535991187:android:73435d2f98c9d5d2936266",
+        "android_client_info": {
+          "package_name": "com.example.bookmet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "38535991187-011j3766n0kt6ob999bod6gau4c22m5m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAevu5XpAbayaSPzsIB_HXKAX4PVjmr--c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "38535991187-011j3766n0kt6ob999bod6gau4c22m5m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
