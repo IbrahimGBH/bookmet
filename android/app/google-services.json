@@ -29,6 +29,13 @@
             {
               "client_id": "38535991187-011j3766n0kt6ob999bod6gau4c22m5m.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "38535991187-srujpvurrn3tl9j386dipd4hp3vckm4o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bookmet"
+              }
             }
           ]
         }

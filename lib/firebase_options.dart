@@ -21,25 +21,13 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -61,4 +49,43 @@ class DefaultFirebaseOptions {
     storageBucket: 'bookmet-c7831.firebasestorage.app',
     measurementId: 'G-Y5M0CJX0PT',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAztobM4QMpuJRIY3DMp8hZUHJmLU-p_q8',
+    appId: '1:38535991187:ios:efe1cadf4435605d936266',
+    messagingSenderId: '38535991187',
+    projectId: 'bookmet-c7831',
+    storageBucket: 'bookmet-c7831.firebasestorage.app',
+    iosClientId: '38535991187-srujpvurrn3tl9j386dipd4hp3vckm4o.apps.googleusercontent.com',
+    iosBundleId: 'com.example.bookmet',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAztobM4QMpuJRIY3DMp8hZUHJmLU-p_q8',
+    appId: '1:38535991187:ios:efe1cadf4435605d936266',
+    messagingSenderId: '38535991187',
+    projectId: 'bookmet-c7831',
+    storageBucket: 'bookmet-c7831.firebasestorage.app',
+    iosClientId: '38535991187-srujpvurrn3tl9j386dipd4hp3vckm4o.apps.googleusercontent.com',
+    iosBundleId: 'com.example.bookmet',
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyAevu5XpAbayaSPzsIB_HXKAX4PVjmr--c',
+    appId: '1:38535991187:android:73435d2f98c9d5d2936266',
+    messagingSenderId: '38535991187',
+    projectId: 'bookmet-c7831',
+    storageBucket: 'bookmet-c7831.firebasestorage.app',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyC4WVwS5RYswGvGZHvnj15jVMXE3fdm4yk',
+    appId: '1:38535991187:web:dd1dde70c455ee5a936266',
+    messagingSenderId: '38535991187',
+    projectId: 'bookmet-c7831',
+    authDomain: 'bookmet-c7831.firebaseapp.com',
+    storageBucket: 'bookmet-c7831.firebasestorage.app',
+    measurementId: 'G-LXBMJCX1DB',
+  );
+
 }
