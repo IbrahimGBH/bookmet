@@ -1,13 +1,30 @@
+
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PagRegistro extends StatelessWidget {
+class PagRegistro extends StatefulWidget {
   const PagRegistro({super.key});
+  @override
+  State<PagRegistro> createState() => _PagRegistroState();
+} 
 
+  class _PagRegistroState extends State<PagRegistro> {
+
+
+    final TextEditingController apellidoController = TextEditingController();
+    final TextEditingController nombreController = TextEditingController();
+    final TextEditingController carnetController = TextEditingController();
+    final TextEditingController carreraController = TextEditingController();
+    final TextEditingController whatsappController = TextEditingController();
+    final TextEditingController correoController = TextEditingController();
+    // para que funcionen los cuadraditos
+ Map<String, bool> seleccionados = {
+    "Ingeniería": false, "Psicología": false, "Idiomas": false, 
+    "Turismo": false, "Comunicación": false, "Derecho": false, "Otros": false
+  };
   @override
   Widget build(BuildContext context) {
-    // Este es el controlador para validar el correo
-    TextEditingController correoController = TextEditingController(); 
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -29,13 +46,18 @@ class PagRegistro extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const TextField(decoration: InputDecoration(labelText: 'Apellidos', border: OutlineInputBorder())),
+                      TextField(
+                        controller: apellidoController,
+                        decoration: const InputDecoration(labelText: 'Apellidos', border: OutlineInputBorder())),
                       const SizedBox(height: 10),
-                      const TextField(decoration: InputDecoration(labelText: 'Nombres', border: OutlineInputBorder())),
+                      TextField(
+                        controller: nombreController,
+                        decoration: const InputDecoration(labelText: 'Nombres', border: OutlineInputBorder())),
                       const SizedBox(height: 10),
-                      const TextField(decoration: InputDecoration(labelText: 'Carnet ID', border: OutlineInputBorder())),
+                      TextField(
+                        controller: carnetController,
+                        decoration: const InputDecoration(labelText: 'Carnet / ID', border: OutlineInputBorder())),
                       const SizedBox(height: 10),
-                      
                       TextField(
                         controller: correoController, 
                         decoration: const InputDecoration(labelText: 'Correo Institucional', border: OutlineInputBorder()),
@@ -50,14 +72,17 @@ class PagRegistro extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const TextField(decoration: InputDecoration(labelText: 'Carrera', border: OutlineInputBorder())),
+                      TextField(
+                        controller: carreraController, 
+                        decoration: const InputDecoration(labelText: 'Carrera', border: OutlineInputBorder())),
                       const SizedBox(height: 10),
-                      const TextField(decoration: InputDecoration(labelText: 'Link Whatsapp', border: OutlineInputBorder())),
+                      TextField(
+                        controller: whatsappController, 
+                        decoration: const InputDecoration(labelText: 'Link Whatsapp', border: OutlineInputBorder())),
                       const SizedBox(height: 20),
                       const Text("Áreas de interés:", style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
-                      
-Container(
+      Container(
                         height: 200,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade300),
@@ -87,30 +112,48 @@ Container(
 
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              onPressed: () {
+              onPressed: () async {
                 if (correoController.text.contains("unimet.edu.ve")) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Correo válido"), backgroundColor: Colors.green),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Correo inválido: Usa el correo de la Unimet"), backgroundColor: Colors.red),
-                  );
+                  try {
+                    final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                      email: correoController.text.trim(),
+                      password: "PasswordTemporal123", 
+                    );
+
+                    await FirebaseFirestore.instance.collection('usuarios').doc(userCredential.user!.uid).set({
+                      'nombre': nombreController.text,
+                      'apellido': apellidoController.text,
+                      'carrera': carreraController.text,
+                      'intereses': seleccionados.entries.where((e) => e.value).map((e) => e.key).toList(),
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("¡Registrado en la nube!"), backgroundColor: Colors.green),
+                    );
+                  } catch (e) {
+                    print("Error: $e");
+                  }
                 }
-              },
+              }, 
               child: const Text("Registrarse", style: TextStyle(color: Colors.white)),
-            ),
+            ), 
           ],
-        ),
-      ),
-    );
+        ), 
+      ), 
+    ); 
   }
-    Widget _crearCheck(String titulo) {
+
+ 
+  Widget _crearCheck(String titulo) {
     return CheckboxListTile(
       title: Text(titulo, style: const TextStyle(fontSize: 14)),
-      value: false,
-      onChanged: (bool? valor) {},
+      value: seleccionados[titulo], 
+      onChanged: (bool? valor) {
+        setState(() {
+          seleccionados[titulo] = valor!;
+        });
+      },
       controlAffinity: ListTileControlAffinity.leading,
     );
   }
-  }
+} 
