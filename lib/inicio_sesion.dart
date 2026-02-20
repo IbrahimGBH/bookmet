@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:bookmet/auth.dart';
+
 
 class InicioSesion extends StatelessWidget {
-  const InicioSesion({super.key});
+  InicioSesion({super.key});
+  final controllerUser = TextEditingController();
+  final controllerPassword = TextEditingController();
+  final Auth verificar = Auth();
 
   @override
   Widget build(BuildContext context) {
@@ -42,17 +47,34 @@ class InicioSesion extends StatelessWidget {
               ),
               const SizedBox(height: 50),
 
-              _buildInputField(label: 'Correo electrónico'),
+              _buildInputField(label: 'Correo electrónico', controller: controllerUser),
               const SizedBox(height: 30),
               
-              _buildInputField(label: 'Contraseña', isObscure: true),
+              _buildInputField(label: 'Contraseña', isObscure: true, controller: controllerPassword),
               const SizedBox(height: 40),
 
               SizedBox(
                 width: 307,
                 height: 60,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final email = controllerUser.text.trim();
+                    final password = controllerPassword.text;
+                    final messenger = ScaffoldMessenger.of(context);
+                    if (email.isEmpty || password.isEmpty) {
+                      messenger.showSnackBar(const SnackBar(content: Text('Por favor complete todos los campos')));
+                      return;
+                    }
+                    messenger.showSnackBar(const SnackBar(content: Text('Iniciando sesión...')));
+                    try {
+                      final cred = await verificar.signInWithEmail(context, email, password);
+                      if (cred == null) {
+                        messenger.showSnackBar(const SnackBar(content: Text('Error al iniciar sesión')));
+                      }
+                    } catch (e) {
+                      messenger.showSnackBar(const SnackBar(content: Text('Error al iniciar sesión')));
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE5853B),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -102,7 +124,7 @@ class InicioSesion extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField({required String label, bool isObscure = false}) {
+  Widget _buildInputField({required String label, bool isObscure = false, TextEditingController? controller}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -115,6 +137,7 @@ class InicioSesion extends StatelessWidget {
           width: 695,
           constraints: const BoxConstraints(maxWidth: double.infinity),
           child: TextField(
+            controller: controller,
             obscureText: isObscure,
             decoration: const InputDecoration(
               border: OutlineInputBorder(
