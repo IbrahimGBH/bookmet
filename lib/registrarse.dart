@@ -5,8 +5,13 @@ class PagRegistro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Este es el controlador para validar el correo
-    TextEditingController correoController = TextEditingController(); 
+
+    final TextEditingController apellidoController = TextEditingController();
+    final TextEditingController nombreController = TextEditingController();
+    final TextEditingController carnetController = TextEditingController();
+    final TextEditingController carreraController = TextEditingController();
+    final TextEditingController whatsappController = TextEditingController();
+    final TextEditingController correoController = TextEditingController();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -29,13 +34,18 @@ class PagRegistro extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const TextField(decoration: InputDecoration(labelText: 'Apellidos', border: OutlineInputBorder())),
+                      TextField(
+                        controller: apellidoController,
+                        decoration: const InputDecoration(labelText: 'Apellidos', border: OutlineInputBorder())),
                       const SizedBox(height: 10),
-                      const TextField(decoration: InputDecoration(labelText: 'Nombres', border: OutlineInputBorder())),
+                      TextField(
+                        controller: nombreController,
+                        decoration: const InputDecoration(labelText: 'Nombres', border: OutlineInputBorder())),
                       const SizedBox(height: 10),
-                      const TextField(decoration: InputDecoration(labelText: 'Carnet ID', border: OutlineInputBorder())),
+                      TextField(
+                        controller: carnetController,
+                        decoration: const InputDecoration(labelText: 'Carnet / ID', border: OutlineInputBorder())),
                       const SizedBox(height: 10),
-                      
                       TextField(
                         controller: correoController, 
                         decoration: const InputDecoration(labelText: 'Correo Institucional', border: OutlineInputBorder()),
@@ -50,13 +60,16 @@ class PagRegistro extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const TextField(decoration: InputDecoration(labelText: 'Carrera', border: OutlineInputBorder())),
+                      TextField(
+                        controller: carreraController, 
+                        decoration: const InputDecoration(labelText: 'Carrera', border: OutlineInputBorder())),
                       const SizedBox(height: 10),
-                      const TextField(decoration: InputDecoration(labelText: 'Link Whatsapp', border: OutlineInputBorder())),
+                      TextField(
+                        controller: whatsappController, 
+                        decoration: const InputDecoration(labelText: 'Link Whatsapp', border: OutlineInputBorder())),
                       const SizedBox(height: 20),
                       const Text("Áreas de interés:", style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
-                      
 Container(
                         height: 200,
                         decoration: BoxDecoration(
@@ -104,7 +117,9 @@ Container(
         ),
       ),
     );
+
   }
+
     Widget _crearCheck(String titulo) {
     return CheckboxListTile(
       title: Text(titulo, style: const TextStyle(fontSize: 14)),
