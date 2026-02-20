@@ -1,3 +1,4 @@
+import 'package:bookmet/registrarse.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 
@@ -36,7 +37,6 @@ class InicioSesion extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 60),
-              // Logo Central
               Center(
                 child: Container(
                   height: 158,
@@ -65,11 +65,14 @@ class InicioSesion extends StatelessWidget {
                       messenger.showSnackBar(const SnackBar(content: Text('Por favor complete todos los campos')));
                       return;
                     }
-                    messenger.showSnackBar(const SnackBar(content: Text('Iniciando sesión...')));
+                    messenger.showSnackBar(const SnackBar(content: Text('Iniciando sesión...'), duration: Duration(seconds: 2),));
                     try {
                       final cred = await verificar.signInWithEmail(context, email, password);
                       if (cred == null) {
-                        messenger.showSnackBar(const SnackBar(content: Text('Error al iniciar sesión')));
+                        messenger.showSnackBar(const SnackBar(content: Text('No se ha podido iniciar sesión')));
+                      }else{
+                        String mensaje = await verificar.getNombre(verificar.getUid());
+                        messenger.showSnackBar(SnackBar(content: Center(child: Text('¡Bienvenido a Bookmet, $mensaje!'))));
                       }
                     } catch (e) {
                       messenger.showSnackBar(const SnackBar(content: Text('Error al iniciar sesión')));
@@ -104,7 +107,9 @@ class InicioSesion extends StatelessWidget {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => PagRegistro()));
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFDAB9),
                       foregroundColor: Colors.black,
