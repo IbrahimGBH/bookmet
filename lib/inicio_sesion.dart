@@ -2,7 +2,6 @@ import 'package:bookmet/registrarse.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 
-
 class InicioSesion extends StatelessWidget {
   InicioSesion({super.key});
   final controllerUser = TextEditingController();
@@ -15,15 +14,18 @@ class InicioSesion extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFDAB9),
-        elevation: 0,
         leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: const Icon(Icons.book, size: 32, color: Colors.black),
+          padding: const EdgeInsets.only(left: 0.5),
+          child: Image.asset('image/LogoBookmetMini.png'),
         ),
+
         actions: [
           TextButton(
             onPressed: () {},
-            child: const Text('Inicio', style: TextStyle(color: Colors.black, fontSize: 20)),
+            child: const Text(
+              'Inicio',
+              style: TextStyle(color: Colors.black, fontSize: 20),
+            ),
           ),
           const SizedBox(width: 20),
           const Icon(Icons.account_circle, size: 40, color: Color(0xFFEA983E)),
@@ -41,16 +43,25 @@ class InicioSesion extends StatelessWidget {
                 child: Container(
                   height: 158,
                   width: 474,
-                  color: Colors.grey[200],
-                  child: const Center(child: Text('BOOKMET LOGO', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold))),
+                  color: Colors.white,
+                  child: Center(
+                    child: Image.asset('image/LogoBookmetColor.png'),
+                  ),
                 ),
               ),
               const SizedBox(height: 50),
 
-              _buildInputField(label: 'Correo electrónico', controller: controllerUser),
+              _buildInputField(
+                label: 'Correo electrónico',
+                controller: controllerUser,
+              ),
               const SizedBox(height: 30),
-              
-              _buildInputField(label: 'Contraseña', isObscure: true, controller: controllerPassword),
+
+              _buildInputField(
+                label: 'Contraseña',
+                isObscure: true,
+                controller: controllerPassword,
+              ),
               const SizedBox(height: 40),
 
               SizedBox(
@@ -62,30 +73,65 @@ class InicioSesion extends StatelessWidget {
                     final password = controllerPassword.text;
                     final messenger = ScaffoldMessenger.of(context);
                     if (email.isEmpty || password.isEmpty) {
-                      messenger.showSnackBar(const SnackBar(content: Text('Por favor complete todos los campos')));
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Por favor complete todos los campos'),
+                        ),
+                      );
                       return;
                     }
-                    messenger.showSnackBar(const SnackBar(content: Text('Iniciando sesión...'), duration: Duration(seconds: 2),));
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Iniciando sesión...'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
                     try {
-                      final cred = await verificar.signInWithEmail(context, email, password);
+                      final cred = await verificar.signInWithEmail(
+                        context,
+                        email,
+                        password,
+                      );
                       if (cred == null) {
-                        messenger.showSnackBar(const SnackBar(content: Text('No se ha podido iniciar sesión')));
-                      }else{
-                        String mensaje = await verificar.getNombre(verificar.getUid());
-                        messenger.showSnackBar(SnackBar(content: Center(child: Text('¡Bienvenido a Bookmet, $mensaje!'))));
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('No se ha podido iniciar sesión'),
+                          ),
+                        );
+                      } else {
+                        String mensaje = await verificar.getNombre(
+                          verificar.getUid(),
+                        );
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Center(
+                              child: Text('¡Bienvenido a Bookmet, $mensaje!'),
+                            ),
+                          ),
+                        );
                       }
                     } catch (e) {
-                      messenger.showSnackBar(const SnackBar(content: Text('Error al iniciar sesión')));
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Error al iniciar sesión'),
+                        ),
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE5853B),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     elevation: 2,
                   ),
                   child: const Text(
                     'Iniciar sesión',
-                    style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -106,18 +152,30 @@ class InicioSesion extends StatelessWidget {
                     '¿No tienes una cuenta de BookMet?',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                   ),
+                  SizedBox(width: 5),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => PagRegistro()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => PagRegistro()),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFDAB9),
                       foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       elevation: 1,
                     ),
-                    child: const Text('Regístrate ahora', style: TextStyle(fontSize: 24)),
+                    child: const Text(
+                      'Regístrate ahora',
+                      style: TextStyle(fontSize: 24),
+                    ),
                   ),
                 ],
               ),
@@ -129,7 +187,11 @@ class InicioSesion extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField({required String label, bool isObscure = false, TextEditingController? controller}) {
+  Widget _buildInputField({
+    required String label,
+    bool isObscure = false,
+    TextEditingController? controller,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
