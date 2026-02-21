@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_screen.dart'; 
 
 void main() {
   runApp(const BookmetApp());
@@ -10,21 +11,15 @@ class BookmetApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Bookmet Marketplace',
+      title: 'Bookmet Marketplace', 
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,
+        fontFamily: 'Inter', 
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'Hito 1: Bookmet Configurado\nListo para desarrollo',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+
+      home: HomeScreen(), 
     );
   }
 }
