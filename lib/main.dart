@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'editar_perfil.dart.'; // Importamos tu nueva pantalla
 
 void main() {
   runApp(const BookmetApp());
@@ -13,18 +14,12 @@ class BookmetApp extends StatelessWidget {
       title: 'Bookmet Marketplace',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+        // Usamos un color semilla naranja, similar al de tu diseño
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE59254)),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'Hito 1: Bookmet Configurado\nListo para desarrollo',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+      // Aquí establecemos EditProfileScreen como la pantalla de inicio
+      home: const EditProfileScreen(),
     );
   }
 }

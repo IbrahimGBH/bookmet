@@ -1,0 +1,284 @@
+import 'package:flutter/material.dart';
+
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
+
+  @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  // Variables para los Checkboxes de la carrera
+  bool isIngenieria = false;
+  bool isPsicologia = false;
+  bool isIdiomas = false;
+  bool isTurismo = false;
+  bool isComunicacion = false;
+  bool isDerecho = false;
+  bool isOtros = false;
+
+  // Color naranja característico de Bookmet según tu Figma
+  final Color colorNaranja = const Color(0xFFE59254);
+
+  // Variable para simular una imagen de perfil seleccionada (para el futuro)
+  // File? _imageFile;
+
+  // Función para simular la selección de una imagen
+  Future<void> _pickImage() async {
+    // Aquí iría la lógica para abrir la galería y seleccionar una foto.
+    // Por ahora, solo mostramos un mensaje en la consola.
+    print('Abrir galería para seleccionar foto de perfil...');
+    
+    // Ejemplo de cómo se actualizaría el estado una vez seleccionada la imagen:
+    // setState(() {
+    //   _imageFile = archivoSeleccionado;
+    // });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Funcionalidad de seleccionar foto próximamente...')),
+    );
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF7D5B7),
+        elevation: 0,
+        title: Row(
+          children: [
+            // Logo central
+              Image.asset(
+                'assets/images/logo_bookmet.png',
+                height: 80, // Puedes ajustar este número para hacerlo más grande o pequeño
+              ),
+            const Spacer(),
+            const Text(
+              'Inicio',
+              style: TextStyle(color: Colors.black, fontSize: 16),
+            ),
+            const SizedBox(width: 15),
+            // Envolvemos el avatar con GestureDetector para detectar toques
+            GestureDetector(
+              onTap: _pickImage, // Llama a la función al tocar
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: colorNaranja,
+                    radius: 20,
+                    // Si tuviéramos una imagen, la mostraríamos aquí:
+                    // backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
+                    child: const Icon(Icons.person, color: Colors.white),
+                  ),
+                  // Pequeño ícono de cámara para indicar que se puede editar
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colorNaranja, width: 1),
+                      ),
+                      child: Icon(Icons.camera_alt, color: colorNaranja, size: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 30.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Logo central gigante
+              Image.asset(
+                'assets/images/logo_bookmet.png',
+                height: 150, // Un tamaño más grande para el medio de la pantalla
+              ),
+              const SizedBox(height: 40),
+
+              // Formularios en dos columnas (Datos Personales y Académicos)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- COLUMNA IZQUIERDA: Datos personales ---
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Datos personales',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildTextField('Apellidos', isRequired: true, isReadOnly: true),
+                          _buildTextField('Nombres', isRequired: true, isReadOnly: true),
+                          _buildTextField('Carnet/ID', isRequired: true, isReadOnly: true),
+                          _buildTextField('Correo Institucional', isRequired: true, isReadOnly: true),
+                          _buildTextField('Contraseña', isRequired: true, isPassword: true),
+                          _buildTextField('Correo Paypal', isRequired: false),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // --- COLUMNA DERECHA: Datos académicos ---
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Datos académicos',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildTextField('Carrera', isRequired: true),
+                          const SizedBox(height: 10),
+                          const Text(
+                            '*',
+                            style: TextStyle(color: Colors.orange, fontSize: 20),
+                          ),
+                          // Lista de Checkboxes
+                          _buildCheckbox('Ingeniería', isIngenieria, (val) => setState(() => isIngenieria = val!)),
+                          _buildCheckbox('Psicología', isPsicologia, (val) => setState(() => isPsicologia = val!)),
+                          _buildCheckbox('Idiomas', isIdiomas, (val) => setState(() => isIdiomas = val!)),
+                          _buildCheckbox('Turismo', isTurismo, (val) => setState(() => isTurismo = val!)),
+                          _buildCheckbox('Comunicación', isComunicacion, (val) => setState(() => isComunicacion = val!)),
+                          _buildCheckbox('Derecho', isDerecho, (val) => setState(() => isDerecho = val!)),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: isOtros,
+                                onChanged: (val) => setState(() => isOtros = val!),
+                                activeColor: colorNaranja,
+                              ),
+                              const Text('Otros: '),
+                              const Expanded(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.black),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          _buildTextField('Link Whatsapp', isRequired: true),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 40),
+              const Text(
+                '( * ) Obligatorio',
+                style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+
+              // Botón de Guardar Cambios
+              ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Guardando cambios...')),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorNaranja,
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Guardar Cambios',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- WIDGETS REUTILIZABLES --- //
+
+  // Generador de Campos de Texto
+  // Generador de Campos de Texto (¡Mejorado!)
+  Widget _buildTextField(String label, {bool isRequired = false, bool isPassword = false, bool isReadOnly = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (isRequired)
+            const Text('* ', style: TextStyle(color: Colors.orange, fontSize: 18)),
+          SizedBox(
+            width: 140,
+            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: SizedBox(
+              height: 35,
+              child: TextField(
+                obscureText: isPassword,
+                readOnly: isReadOnly, // ¡Aquí está la magia que bloquea el texto!
+                style: TextStyle(
+                  color: isReadOnly ? Colors.grey[700] : Colors.black, // Texto más opaco si está bloqueado
+                ),
+                decoration: InputDecoration(
+                  filled: isReadOnly, // Rellena el fondo si es de solo lectura
+                  fillColor: Colors.grey[200], // Color gris clarito para mostrar que está bloqueado
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                  border: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    // Borde más suave si está bloqueado
+                    borderSide: BorderSide(color: isReadOnly ? Colors.grey : Colors.black), 
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Generador de Checkboxes
+  Widget _buildCheckbox(String title, bool value, Function(bool?) onChanged) {
+    return SizedBox(
+      height: 30,
+      child: Row(
+        children: [
+          Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: colorNaranja,
+          ),
+          Text(title),
+        ],
+      ),
+    );
+  }
+}
