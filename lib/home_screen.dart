@@ -93,12 +93,147 @@ class HomeScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 80),
-            const Center(child: Text("Aquí irá la parte de Escoge la opción para abajo, en un rato la haago", style: TextStyle(color: Colors.grey))),
+
+            // SECCIÓN: ESCOGE LA OPCIÓN 
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Escoge la opción:',
+                    style: TextStyle(fontSize: 42, fontWeight: FontWeight.bold, letterSpacing: -1),
+                  ),
+                  const SizedBox(height: 40),
+                  // Row para poner los dos botones uno al lado del otro
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Botón 1: Publicar
+                      _buildOptionButton(
+                        image: 'assets/images/Escoge la opcion 2.png', 
+                        title: 'Publicar',
+                        description: 'Sube tus libros, guías, apuntes o materiales y dales una segunda vida. Gestiona tus recursos de forma sencilla.',
+                        onTap: () { print("Click en Publicar"); },
+                      ),
+                      const SizedBox(width: 40), // Espacio entre botones
+
+                      // Botón 2: Explorar Catálogo
+                      _buildOptionButton(
+                        image: 'assets/images/Escoge la opcion 1.png', 
+                        title: 'Explorar catálogo',
+                        description: 'Encuentra el material académico que necesitas. Filtra por carrera, materia o área de conocimiento.',
+                        onTap: () { print("Click en Catálogo"); },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 100),
+
+            // SECCIÓN: MISIÓN Y VISIÓN 
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 50),
+              color: const Color.fromARGB(255, 254, 248, 248), 
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildInfoCardWhite(
+                      image: 'assets/images/titulo mision.png',
+                      text: 'La misión de BookMET es facilitar el intercambio de libros y material académico entre los miembros de la Universidad Metropolitana, a través de una plataforma web y móvil que permite publicar, buscar y gestionar recursos académicos de forma organizada, segura y accesible. El sistema busca aprovechar los materiales disponibles dentro de la universidad, fomentando la colaboración entre estudiantes y docentes y contribuyendo a una experiencia académica eficiente y equitativa entre las personas involucradas.',
+                    ),
+                  ),
+                  const SizedBox(width: 40),
+                  Expanded(
+                    child: _buildInfoCardWhite(
+                      image: 'assets/images/titulo Vision.png',
+                      text: 'La visión de BookMET es convertirse en la plataforma digital para el intercambio de material académico dentro de la Universidad Metropolitana, promoviendo la colaboración entre usuarios, reutilización de recursos y acceso equitativo al conocimiento, apoyando así el desarrollo académico y tecnológico dentro de la universidad.',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+
+            // PANEL FINAL (FOOTER)
+            Image.asset('assets/images/panel de abajo.png', width: double.infinity, fit: BoxFit.cover),
           ],
         ),
       ),
     );
   }
-}
 
+  // FUNCIONES DE AYUDA MEJORADAS
+
+  // Función para los BOTONES de Comprar/Vender (Con título y descripción abajo)
+  Widget _buildOptionButton({
+    required String image, 
+    required String title, 
+    required String description,
+    required VoidCallback onTap, // Para que el botón haga algo al darle click (por ahora nada)
+  }) {
+    return Expanded(
+      child: InkWell( // InkWell hace que se pueda dar click y muestra una animación
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+             borderRadius: BorderRadius.circular(20),
+             // Un borde muy sutil 
+             border: Border.all(color: const Color.fromARGB(255, 235, 222, 222)) 
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                // Ajuste de la altura de las imagenes para que se vea bien 
+                child: Image.asset(image, width: double.infinity, height: 200, fit: BoxFit.cover),
+              ),
+              const SizedBox(height: 20),
+              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Text(description, style: TextStyle(fontSize: 16, color: Colors.grey[700], height: 1.4)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Función para las tarjetas de Misión y Visión (Con sombra)
+  Widget _buildInfoCardWhite({required String image, required String text}) {
+    return Container(
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(30),
+        
+        boxShadow: [
+          BoxShadow(
+            color: const Color.fromARGB(255, 131, 130, 130).withOpacity(0.15), // Color de la sombra suave
+            spreadRadius: 5,
+            blurRadius: 15,
+            offset: const Offset(0, 5), // Posición de la sombra
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Image.asset(image, height: 70), // Títulos (MISION/VISION)
+          const SizedBox(height: 30),
+          Text(
+            text, 
+            textAlign: TextAlign.center, 
+            // Tamaño y el interlineado para el texto largo
+            style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87)
+          ),
+        ],
+      ),
+    );
+  }
+}
