@@ -24,14 +24,14 @@ class Auth {
       return cred;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
+        //vacío
       } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+        //vacío
       }
       return null;
     }
   }
-  
+
   String getUid(){
     final User? usuario = fAuth.currentUser;
     if(usuario != null){
@@ -54,6 +54,22 @@ class Auth {
       return campo;
     } else {
       return "";
+    }
+  }
+
+    Future<bool> isAdmin(String uid) async {
+    DocumentSnapshot<Map<String, dynamic>> docSnapshot = await FirebaseFirestore
+        .instance
+        .collection('usuarios')
+        .doc(uid)
+        .get();
+
+    if (docSnapshot.data() != null && docSnapshot.data()!.containsKey('admin')) {
+      Map<String, dynamic>? data = docSnapshot.data();
+      bool campo = data?['admin'];
+      return campo;
+    } else {
+      return false;
     }
   }
 }

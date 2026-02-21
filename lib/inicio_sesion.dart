@@ -102,10 +102,11 @@ class InicioSesion extends StatelessWidget {
                         String mensaje = await verificar.getNombre(
                           verificar.getUid(),
                         );
+                        bool esAdmin = await verificar.isAdmin(verificar.getUid());
                         messenger.showSnackBar(
                           SnackBar(
                             content: Center(
-                              child: Text('¡Bienvenido a Bookmet, $mensaje!'),
+                              child: esAdmin == false ? Text('¡Bienvenido a Bookmet, $mensaje!') : Text('Bienvenido, admin'),
                             ),
                           ),
                         );
