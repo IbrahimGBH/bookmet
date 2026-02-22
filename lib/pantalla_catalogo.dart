@@ -1,3 +1,4 @@
+import 'package:bookmet/home_screen.dart';
 import 'package:flutter/material.dart';
 
 class PantallaCatalogo extends StatelessWidget {
@@ -17,7 +18,7 @@ class PantallaCatalogo extends StatelessWidget {
         leading: Padding(
           padding: const EdgeInsets.only(left: 20.0),
           child: Image.asset(
-            'image/LogoBookmetMini.png', // Misma ruta que en el login
+            'image/LogoBookmetMini.png',
             fit: BoxFit.contain,
           ),
         ),
@@ -33,7 +34,7 @@ class PantallaCatalogo extends StatelessWidget {
           ),
           const SizedBox(width: 15),
           TextButton(
-            onPressed: () {}, 
+            onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()),);}, 
             child: const Text('Inicio', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 15),
@@ -41,7 +42,7 @@ class PantallaCatalogo extends StatelessWidget {
           // BOTÓN DE LA PERSONITA 
           InkWell(
             onTap: () {
-              print("Has tocado el perfil del usuario");
+              //enviar a perfil
             },
             borderRadius: BorderRadius.circular(50),
             child: const CircleAvatar(

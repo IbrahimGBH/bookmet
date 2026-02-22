@@ -133,6 +133,10 @@ class PagRegistro extends StatefulWidget {
                       'apellido': apellidoController.text,
                       'carrera': carreraController.text,
                       'intereses': seleccionados.entries.where((e) => e.value).map((e) => e.key).toList(),
+                      'correo':correoController.text,
+                      'link_whatsapp':whatsappController.text,
+                      'carnet_id':carnetController.text,
+                      'correo_paypal': "",
                     });
 
                     ScaffoldMessenger.of(context).showSnackBar(

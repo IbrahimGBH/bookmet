@@ -1,3 +1,4 @@
+import 'package:bookmet/pantalla_catalogo.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/registrarse.dart';
@@ -31,7 +32,7 @@ class HomeScreen extends StatelessWidget {
                     children: verificar.chequearUsuario()==false ? [SizedBox(width: 20)] : [
                       TextButton(onPressed: () {}, child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 20),
-                      TextButton(onPressed: () {}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
+                      TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 20),
                       TextButton(onPressed: () {}, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 30),

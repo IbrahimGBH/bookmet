@@ -233,7 +233,7 @@ class AdminView extends StatelessWidget {
                 const Icon(Icons.cancel_outlined, color: Color(0xFFE5853B), size: 20),
               ],
             ),
-          )).toList(),
+          )),
           const SizedBox(height: 15),
           SizedBox(
             width: double.infinity,

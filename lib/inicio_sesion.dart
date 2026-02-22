@@ -134,7 +134,7 @@ class InicioSesion extends StatelessWidget {
                           ),
                         );
                         Future.delayed(const Duration(seconds: 1), () {
-                          if (context.mounted) {
+                          if (context.mounted && (esAdmin==false)) {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(builder: (context) => const PantallaCatalogo()),
