@@ -2,7 +2,6 @@ import 'package:bookmet/registrarse.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/home_screen.dart';
-import 'package:bookmet/admin_view.dart';
 import 'package:bookmet/pantalla_catalogo.dart';
 
 
@@ -85,7 +84,7 @@ class InicioSesion extends StatelessWidget {
                       return;
                     }
 
-                    // ADMIN CABLEADO 
+/*                    // ADMIN CABLEADO 
                     if (email == 'admin@unimet.edu.ve' && password == 'Admin123') {
                       messenger.showSnackBar(
                         const SnackBar(
@@ -101,7 +100,7 @@ class InicioSesion extends StatelessWidget {
                       return; 
                     }
                     // Find del cableado del admin
-
+*/
 
                     messenger.showSnackBar(
                       const SnackBar(

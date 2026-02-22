@@ -75,6 +75,86 @@ class Auth {
     }
   }
 
+   Future<String> getCarnet(String uid) async {
+    DocumentSnapshot<Map<String, dynamic>> docSnapshot = await FirebaseFirestore
+        .instance
+        .collection('usuarios')
+        .doc(uid)
+        .get();
+
+    if (docSnapshot.exists) {
+      Map<String, dynamic>? data = docSnapshot.data();
+      String campo = data?['carnet_id'];
+      return campo;
+    } else {
+      return "";
+    }
+  }
+
+   Future<String> getApellido(String uid) async {
+    DocumentSnapshot<Map<String, dynamic>> docSnapshot = await FirebaseFirestore
+        .instance
+        .collection('usuarios')
+        .doc(uid)
+        .get();
+
+    if (docSnapshot.exists) {
+      Map<String, dynamic>? data = docSnapshot.data();
+      String campo = data?['apellido'];
+      return campo;
+    } else {
+      return "";
+    }
+  }
+
+ Future<String> getCarrera(String uid) async {
+    DocumentSnapshot<Map<String, dynamic>> docSnapshot = await FirebaseFirestore
+        .instance
+        .collection('usuarios')
+        .doc(uid)
+        .get();
+
+    if (docSnapshot.exists) {
+      Map<String, dynamic>? data = docSnapshot.data();
+      String campo = data?['carrera'];
+      return campo;
+    } else {
+      return "";
+    }
+  }
+
+   Future<String> getPaypal(String uid) async {
+    DocumentSnapshot<Map<String, dynamic>> docSnapshot = await FirebaseFirestore
+        .instance
+        .collection('usuarios')
+        .doc(uid)
+        .get();
+
+    if (docSnapshot.exists) {
+      Map<String, dynamic>? data = docSnapshot.data();
+      String campo = data?['correo_paypal'];
+      return campo;
+    } else {
+      return "";
+    }
+  }
+
+   Future<String> getWhatsapp(String uid) async {
+    DocumentSnapshot<Map<String, dynamic>> docSnapshot = await FirebaseFirestore
+        .instance
+        .collection('usuarios')
+        .doc(uid)
+        .get();
+
+    if (docSnapshot.exists) {
+      Map<String, dynamic>? data = docSnapshot.data();
+      String campo = data?['link_whatsapp'];
+      return campo;
+    } else {
+      return "";
+    }
+  }
+
     Future<bool> isAdmin(String uid) async {
     DocumentSnapshot<Map<String, dynamic>> docSnapshot = await FirebaseFirestore
         .instance

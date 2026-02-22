@@ -1,3 +1,4 @@
+import 'package:bookmet/editar_perfil.dart';
 import 'package:bookmet/pantalla_catalogo.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
@@ -36,7 +37,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(width: 20),
                       TextButton(onPressed: () {}, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 30),
-                      const Icon(Icons.account_circle, size: 45, color: Color(0xFFE5853B)), // Ícono de perfil
+                      IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));} , icon: const Icon(Icons.account_circle, size: 45, color: Color(0xFFE5853B))), // Ícono de perfil
                     ],
                   )
                 ],
