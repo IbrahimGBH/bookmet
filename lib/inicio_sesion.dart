@@ -1,6 +1,7 @@
 import 'package:bookmet/registrarse.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
+import 'package:bookmet/home_screen.dart';
 
 class InicioSesion extends StatelessWidget {
   InicioSesion({super.key});
@@ -21,7 +22,7 @@ class InicioSesion extends StatelessWidget {
 
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()),);},
             child: const Text(
               'Inicio',
               style: TextStyle(color: Colors.black, fontSize: 20),

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:bookmet/auth.dart';
+import 'package:bookmet/registrarse.dart';
+import 'package:bookmet/inicio_sesion.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  HomeScreen({super.key});
+  final Auth verificar = Auth();
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +28,7 @@ class HomeScreen extends StatelessWidget {
                   
                   // Botones de la barra superior
                   Row(
-                    children: [
+                    children: verificar.chequearUsuario()==false ? [SizedBox(width: 20)] : [
                       TextButton(onPressed: () {}, child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 20),
                       TextButton(onPressed: () {}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
@@ -72,7 +76,7 @@ class HomeScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: () {},
+                        onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()),);},
                         child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(width: 20),
@@ -83,7 +87,7 @@ class HomeScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: () {},
+                        onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PagRegistro()),);},
                         child: const Text('Crear cuenta', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ],
