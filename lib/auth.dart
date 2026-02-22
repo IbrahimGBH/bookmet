@@ -1,3 +1,4 @@
+import 'package:bookmet/admin_view.dart';
 import 'package:bookmet/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -17,10 +18,18 @@ class Auth {
         email: email,
         password: password,
       );
+      bool esAdmin = await isAdmin(getUid());
+      if(esAdmin==false){
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+      )
+      ;}else{
+              Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => AdminView()),
+              );
+      }
       return cred;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
