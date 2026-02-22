@@ -2,6 +2,9 @@ import 'package:bookmet/registrarse.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/home_screen.dart';
+import 'package:bookmet/admin_view.dart';
+import 'package:bookmet/pantalla_catalogo.dart';
+
 
 class InicioSesion extends StatelessWidget {
   InicioSesion({super.key});
@@ -81,6 +84,25 @@ class InicioSesion extends StatelessWidget {
                       );
                       return;
                     }
+
+                    // ADMIN CABLEADO 
+                    if (email == 'admin@unimet.edu.ve' && password == 'Admin123') {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Acceso de Administrador concedido'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      // Es el admin, va directo al Dashboard
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => AdminView()),
+                      );
+                      return; 
+                    }
+                    // Find del cableado del admin
+
+
                     messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Iniciando sesión...'),
@@ -111,7 +133,16 @@ class InicioSesion extends StatelessWidget {
                             ),
                           ),
                         );
+                        Future.delayed(const Duration(seconds: 1), () {
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => const PantallaCatalogo()),
+                            );
+                          }
+                        });
                       }
+                      
                     } catch (e) {
                       messenger.showSnackBar(
                         const SnackBar(

@@ -17,6 +17,7 @@ class PagRegistro extends StatefulWidget {
     final TextEditingController carnetController = TextEditingController();
     final TextEditingController carreraController = TextEditingController();
     final TextEditingController whatsappController = TextEditingController();
+    final TextEditingController claveController = TextEditingController();
     final TextEditingController correoController = TextEditingController();
     // para que funcionen los cuadraditos
  Map<String, bool> seleccionados = {
@@ -62,6 +63,13 @@ class PagRegistro extends StatefulWidget {
                         controller: correoController, 
                         decoration: const InputDecoration(labelText: 'Correo Institucional', border: OutlineInputBorder()),
                       ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: claveController,
+                        obscureText: true, // Esto oculta los caracteres con asteriscos
+                        decoration: const InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
+                      ),
+                      
                     ],
                   ),
                 ),
@@ -117,7 +125,7 @@ class PagRegistro extends StatefulWidget {
                   try {
                     final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
                       email: correoController.text.trim(),
-                      password: "PasswordTemporal123", 
+                      password: claveController.text.trim(), 
                     );
 
                     await FirebaseFirestore.instance.collection('usuarios').doc(userCredential.user!.uid).set({
@@ -130,6 +138,15 @@ class PagRegistro extends StatefulWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("¡Registrado en la nube!"), backgroundColor: Colors.green),
                     );
+
+                    // Para que direccione a iniciar sesion al crearse una cuenta
+                    Future.delayed(const Duration(seconds: 1), () {
+                      if (context.mounted) {
+                        Navigator.pop(context); 
+                      }
+                    });
+                    // 
+
                   } catch (e) {
                     print("Error: $e");
                   }
