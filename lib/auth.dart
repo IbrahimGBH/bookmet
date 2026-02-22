@@ -40,6 +40,15 @@ class Auth {
       return null;
     }
   }
+  
+Future<void> signOut(BuildContext context) async {
+  try {
+    await FirebaseAuth.instance.signOut();
+    Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+  } catch (e) {
+     //manejo del error (por implementar)
+  }
+}
 
   bool chequearUsuario(){
     final User? usuario = fAuth.currentUser;

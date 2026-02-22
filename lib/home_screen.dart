@@ -71,7 +71,19 @@ class HomeScreen extends StatelessWidget {
                   // Botones
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: verificar.chequearUsuario()==true ? 
+                      [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE5853B), 
+                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () {verificar.signOut(context);},
+                        child: const Text('Cerrar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      )
+                      ] : 
+                      [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFE5853B), 

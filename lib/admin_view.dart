@@ -42,7 +42,7 @@ class AdminView extends StatelessWidget {
                   child: SizedBox(
                     width: 200,
                     child: TextButton(
-                      onPressed: (){},
+                      onPressed: (){verificar.signOut(context);},
                       child: Text(
                         "Admin: $nombre | Log Out",
                         style: TextStyle(color: Colors.white.withValues(), fontSize: 16),
