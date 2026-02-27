@@ -32,7 +32,10 @@ class _PagRegistroState extends State<PagRegistro> {
           children: [
             const SizedBox(height: 20),
             const Text('Registrarse', style: TextStyle(fontSize: 20)),
-            const SizedBox(height: 30),
+            const SizedBox(height: 5),
+            const Text('* campos obligatorios', style: TextStyle(fontSize:10, color: Colors.red)),
+            const SizedBox(height: 25),
+
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -42,27 +45,67 @@ class _PagRegistroState extends State<PagRegistro> {
                     children: [
                       TextField(
                         controller: apellidoController,
-                        decoration: const InputDecoration(labelText: 'Apellidos', border: OutlineInputBorder())),
+                          decoration: const InputDecoration(
+                            label: Text.rich(TextSpan(children: [
+                              TextSpan(text: 'Apellidos '),
+                            TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                                  ]
+                                  )
+                                  ),
+                               border: OutlineInputBorder(),
+                           ),
+                        ),
+                          
+                
                       const SizedBox(height: 10),
                       TextField(
                         controller: nombreController,
-                        decoration: const InputDecoration(labelText: 'Nombres', border: OutlineInputBorder())),
+                        decoration: const InputDecoration(
+                        label: Text.rich(TextSpan(children: [
+                           TextSpan(text: 'Nombres '),
+                          TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                       ]
+                       )
+                       ),
+                        border: OutlineInputBorder(),
+                         ),
+                        ),
                       const SizedBox(height: 10),
+                      
                       TextField(
                         controller: carnetController,
-                        decoration: const InputDecoration(labelText: 'Carnet / ID', border: OutlineInputBorder())),
+                          decoration: const InputDecoration(
+                            label: Text.rich(TextSpan(children: [
+                            TextSpan(text: 'Carnet / ID '),
+                              TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                            ]
+                            )
+                            ),
+                          border: OutlineInputBorder(),
+                    ),),
                       const SizedBox(height: 10),
                       TextField(
                         controller: correoController, 
-                        decoration: const InputDecoration(labelText: 'Correo Institucional', border: OutlineInputBorder()),
-                      ),
+                        decoration: const InputDecoration(
+                          label: Text.rich(TextSpan(children: [
+                        TextSpan(text: 'Correo Institucional '),
+                            TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                          ])),
+                          border: OutlineInputBorder(),
+                        ),),
+
                       const SizedBox(height: 10),
                       TextField(
                         controller: claveController,
                         obscureText: true,
-                        decoration: const InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
-                      ),
-                    ],
+                      decoration: const InputDecoration(
+                        label: Text.rich(TextSpan(children: [
+                        TextSpan(text: 'Contraseña '),
+                      TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                          ])),
+                      border: OutlineInputBorder(),
+                          ),),
+                    ]
                   ),
                 ),
                 const SizedBox(width: 30),
@@ -108,6 +151,17 @@ class _PagRegistroState extends State<PagRegistro> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               onPressed: () async {
+                if( apellidoController.text.isEmpty || nombreController.text.isEmpty || carnetController.text.isEmpty || correoController.text.isEmpty || claveController.text.isEmpty || carreraController.text.isEmpty){
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Porfavor llenar los campos obligatorios"),
+                      backgroundColor: Colors.amber,
+
+                    ),
+                  );
+                  return;
+                }
+
                 if (correoController.text.contains("unimet.edu.ve")) {
                   try {
                     final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
