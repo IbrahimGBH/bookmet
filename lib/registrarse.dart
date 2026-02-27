@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,21 +8,20 @@ class PagRegistro extends StatefulWidget {
   State<PagRegistro> createState() => _PagRegistroState();
 } 
 
-  class _PagRegistroState extends State<PagRegistro> {
+class _PagRegistroState extends State<PagRegistro> {
+  final TextEditingController apellidoController = TextEditingController();
+  final TextEditingController nombreController = TextEditingController();
+  final TextEditingController carnetController = TextEditingController();
+  final TextEditingController carreraController = TextEditingController();
+  final TextEditingController whatsappController = TextEditingController();
+  final TextEditingController claveController = TextEditingController();
+  final TextEditingController correoController = TextEditingController();
 
-
-    final TextEditingController apellidoController = TextEditingController();
-    final TextEditingController nombreController = TextEditingController();
-    final TextEditingController carnetController = TextEditingController();
-    final TextEditingController carreraController = TextEditingController();
-    final TextEditingController whatsappController = TextEditingController();
-    final TextEditingController claveController = TextEditingController();
-    final TextEditingController correoController = TextEditingController();
-    // para que funcionen los cuadraditos
- Map<String, bool> seleccionados = {
+  Map<String, bool> seleccionados = {
     "Ingeniería": false, "Psicología": false, "Idiomas": false, 
-    "Turismo": false, "Comunicación": false, "Derecho": false, "Otros": false
+    "Turismo": false, "Comunicación": false, "Derecho": false, "Derecho": false, "Economía": false, "Administración": false, "Contaduría": false,"Otros": false
   };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,14 +30,9 @@ class PagRegistro extends StatefulWidget {
         padding: const EdgeInsets.all(30),
         child: Column(
           children: [
-            // Logo pedir foto a bettina
-            // Image.asset('', height: ), 
-            // en los '' es como se llama la foto dentro de esta carpeta y poner el height (it probando)
-            
             const SizedBox(height: 20),
             const Text('Registrarse', style: TextStyle(fontSize: 20)),
             const SizedBox(height: 30),
-
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -66,16 +59,13 @@ class PagRegistro extends StatefulWidget {
                       const SizedBox(height: 10),
                       TextField(
                         controller: claveController,
-                        obscureText: true, // Esto oculta los caracteres con asteriscos
+                        obscureText: true,
                         decoration: const InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
                       ),
-                      
                     ],
                   ),
                 ),
-
                 const SizedBox(width: 30),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +80,7 @@ class PagRegistro extends StatefulWidget {
                       const SizedBox(height: 20),
                       const Text("Áreas de interés:", style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
-      Container(
+                      Container(
                         height: 200,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade300),
@@ -108,16 +98,13 @@ class PagRegistro extends StatefulWidget {
                             _crearCheck("Otros"),
                           ],
                         ),
-                      
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 40),
-
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               onPressed: () async {
@@ -143,17 +130,21 @@ class PagRegistro extends StatefulWidget {
                       const SnackBar(content: Text("¡Registrado en la nube!"), backgroundColor: Colors.green),
                     );
 
-                    // Para que direccione a iniciar sesion al crearse una cuenta
                     Future.delayed(const Duration(seconds: 1), () {
                       if (context.mounted) {
                         Navigator.pop(context); 
                       }
                     });
-                    // 
 
                   } catch (e) {
-                    print("Error: $e");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+                    );
                   }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("¡Error! Ingresa con tu correo UNIMET"), backgroundColor: Colors.red),
+                  );
                 }
               }, 
               child: const Text("Registrarse", style: TextStyle(color: Colors.white)),
@@ -164,7 +155,6 @@ class PagRegistro extends StatefulWidget {
     ); 
   }
 
- 
   Widget _crearCheck(String titulo) {
     return CheckboxListTile(
       title: Text(titulo, style: const TextStyle(fontSize: 14)),
@@ -177,4 +167,4 @@ class PagRegistro extends StatefulWidget {
       controlAffinity: ListTileControlAffinity.leading,
     );
   }
-} 
+}
