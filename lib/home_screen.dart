@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/registrarse.dart';
 import 'package:bookmet/inicio_sesion.dart';
+import 'package:bookmet/crear_producto.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -35,7 +36,10 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(width: 20),
                       TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 20),
-                      TextButton(onPressed: () {}, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
+                      TextButton(onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
+
+                      }, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 30),
                       IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));} , icon: const Icon(Icons.account_circle, size: 45, color: Color(0xFFE5853B))), // Ícono de perfil
                     ],

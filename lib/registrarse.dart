@@ -20,7 +20,7 @@ class _PagRegistroState extends State<PagRegistro> {
 
   Map<String, bool> seleccionados = {
     "Ingeniería": false, "Psicología": false, "Idiomas": false, 
-    "Turismo": false, "Comunicación": false, "Derecho": false, "Derecho": false, "Economía": false, "Administración": false, "Contaduría": false,"Otros": false
+    "Turismo": false, "Comunicación": false, "Derecho": false, "Economía": false, "Administración": false, "Contaduría": false,"Otros": false
   };
 
   @override
@@ -209,7 +209,7 @@ class _PagRegistroState extends State<PagRegistro> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text("Porfavor llenar los campos obligatorios"),
-                          backgroundColor: Colors.amber,
+                          backgroundColor: Colors.red,
                         ),
                       );
                       return;
