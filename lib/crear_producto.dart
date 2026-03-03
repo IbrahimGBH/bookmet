@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:typed_data';
 import 'package:flutter_image_compress/flutter_image_compress.dart'; 
+import 'dart:html' as html;
+
 
 class CrearProducto extends StatefulWidget {
   const CrearProducto({super.key});
@@ -23,11 +25,11 @@ class _CrearProductoState extends State<CrearProducto> {
   String? categoriaSeleccionada;
   String? estadoSeleccionado;
   String? tipoTransaccionSeleccionado;
-    File? _imageFile;
+
 
   Uint8List? _webImageBytes;
   final ImagePicker _picker = ImagePicker();
-  String? _imageUrl;
+
   bool _isUploading = false;
 
   Future<void> _pickImage() async {
@@ -39,45 +41,51 @@ class _CrearProductoState extends State<CrearProducto> {
       });
     }
   }
- 
+ // Revisar porque no me esta agarrando pero segun lo que busque esta es la forma de hacerlo mas pequeño (que se pueda poner la foto y que no sea muy pesado)
 Future<String?> _uploadImage() async {
-    if (_webImageBytes == null) return null;
+  if (_webImageBytes == null) return null;
+  
+  try {
+    if (!mounted) return null;
+    setState(() => _isUploading = true);
+
+
+    Uint8List? compressedBytes = await FlutterImageCompress.compressWithList(
+      _webImageBytes!,
+      minWidth: 300, 
+      minHeight: 300,
+      quality: 10,  // esto se puede cambiar porque es la calidad de la foto cuando se pruebe mejor 
+    );
+
+    String fileName = 'productos/${DateTime.now().millisecondsSinceEpoch}.png';
+   // esto utiliza los bytes compirmidos arriba 
+    final blob = html.Blob([compressedBytes]);
     
-    try {
-      if (!mounted) return null;
-      setState(() => _isUploading = true);
-      
+    UploadTask uploadTask = FirebaseStorage.instance
+        .ref()
+        .child(fileName)
+        .putBlob(blob);
 
-      Uint8List? compressedBytes = await FlutterImageCompress.compressWithList(
-        _webImageBytes!,
-        minHeight: 1000, 
-        minWidth: 1000,
-        quality: 50, 
-      );
-
-      String fileName = 'productos/${DateTime.now().millisecondsSinceEpoch}.png';
-      
-
-      TaskSnapshot snapshot = await FirebaseStorage.instance
-          .ref()
-          .child(fileName)
-          .putData(compressedBytes);
-      
-      return await snapshot.ref.getDownloadURL();
-    } catch (e) {
-      print('Error detallado subiendo imagen: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error al subir la imagen: $e"), backgroundColor: Colors.red),
-        );
-      }
-      return null;
-    } finally {
-      if (mounted) {
-        setState(() => _isUploading = false);
-      }
+    TaskSnapshot snapshot = await uploadTask;
+    
+    String downloadUrl = await snapshot.ref.getDownloadURL();
+    
+    if (mounted) {
+      setState(() => _isUploading = false);
     }
+    
+    return downloadUrl;
+  } catch (e) {
+    print('Error detallado subiendo imagen: $e');
+    if (mounted) {
+      setState(() => _isUploading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al subir: ${e.toString()}"), backgroundColor: Colors.red),
+      );
+    }
+    return null;
   }
+}
 
   @override
   Widget build(BuildContext context) {
