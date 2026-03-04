@@ -1,14 +1,14 @@
-import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart'; 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:typed_data';
-import 'package:flutter_image_compress/flutter_image_compress.dart'; 
-import 'dart:html' as html;
-
-
+/* import 'package:flutter_image_compress/flutter_image_compress.dart'; 
+esto lo quite porque segun es lo que trae problemas y hace que sea mas lento pero creo que lo vamos a tener que 
+volver a poner para que la imagen se comprima y pueda guardarse mas rapido 
+*/
 class CrearProducto extends StatefulWidget {
   const CrearProducto({super.key});
   @override
@@ -46,43 +46,34 @@ Future<String?> _uploadImage() async {
   if (_webImageBytes == null) return null;
   
   try {
-    if (!mounted) return null;
+
     setState(() => _isUploading = true);
-
-
-    Uint8List? compressedBytes = await FlutterImageCompress.compressWithList(
+    /* esta es la logica de comprimir la imagen que la quite por ahora 
+    Uint8List compressedBytes = await FlutterImageCompress.compressWithList(
       _webImageBytes!,
-      minWidth: 300, 
-      minHeight: 300,
-      quality: 10,  // esto se puede cambiar porque es la calidad de la foto cuando se pruebe mejor 
+      minWidth: 600,  
+      minHeight: 600,
+      quality: 25,    
+    );
+    */
+
+    String fileName = 'productos/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
+
+    UploadTask uploadTask = storageRef.putData(
+      _webImageBytes!, 
+      SettableMetadata(contentType: 'image/jpeg')
     );
 
-    String fileName = 'productos/${DateTime.now().millisecondsSinceEpoch}.png';
-   // esto utiliza los bytes compirmidos arriba 
-    final blob = html.Blob([compressedBytes]);
-    
-    UploadTask uploadTask = FirebaseStorage.instance
-        .ref()
-        .child(fileName)
-        .putBlob(blob);
-
     TaskSnapshot snapshot = await uploadTask;
-    
+   
     String downloadUrl = await snapshot.ref.getDownloadURL();
     
-    if (mounted) {
-      setState(() => _isUploading = false);
-    }
-    
+    setState(() => _isUploading = false);
     return downloadUrl;
+
   } catch (e) {
-    print('Error detallado subiendo imagen: $e');
-    if (mounted) {
-      setState(() => _isUploading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al subir: ${e.toString()}"), backgroundColor: Colors.red),
-      );
-    }
+    setState(() => _isUploading = false);
     return null;
   }
 }
