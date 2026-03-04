@@ -6,6 +6,7 @@ import 'package:bookmet/registrarse.dart';
 import 'package:bookmet/inicio_sesion.dart';
 import 'package:bookmet/crear_producto.dart';
 
+
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
   final Auth verificar = Auth();
@@ -29,19 +30,60 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   Image.asset('assets/images/logo_bookmet.png', height: 40), 
                   
-                  // Botones de la barra superior
+                  
                   Row(
                     children: verificar.chequearUsuario()==false ? [SizedBox(width: 20)] : [
-                      TextButton(onPressed: () {}, child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
+                      TextButton(onPressed: () {}, child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 20),
-                      TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
+                      TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 20),
                       TextButton(onPressed: () {
                         Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
 
-                      }, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
+                      }, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 30),
-                      IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));} , icon: const Icon(Icons.account_circle, size: 45, color: Color(0xFFE5853B))), // Ícono de perfil
+                      PopupMenuButton<String>(
+                      icon: const Icon(Icons.account_circle, size: 45, color: Color(0xFFE5853B)),
+  
+  onSelected: (String value) {
+    switch (value) {
+      case 'perfil':
+        // aqui falta la pestaña de mi perfil como el figma 
+      case 'editar':
+        Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));
+        break;
+      case 'cerrar_sesion':
+        verificar.signOut(context);
+        break;
+    }
+  },
+  
+
+  itemBuilder: (BuildContext context) => [
+    const PopupMenuItem<String>(
+      value: 'perfil',
+      child: ListTile(
+        leading: Icon(Icons.person_outline),
+        title: Text('Mi Perfil'),
+      ),
+    ),
+    const PopupMenuItem<String>(
+      value: 'editar',
+      child: ListTile(
+        leading: Icon(Icons.edit_outlined),
+        title: Text('Editar Perfil'),
+      ),
+    ),
+    const PopupMenuDivider(), 
+    const PopupMenuItem<String>(
+      value: 'cerrar_sesion',
+      child: ListTile(
+        leading: Icon(Icons.logout, color: Colors.red),
+        title: Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+      ),
+    ),
+  ],
+),
                     ],
                   )
                 ],
