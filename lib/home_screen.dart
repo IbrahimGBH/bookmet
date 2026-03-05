@@ -1,9 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:bookmet/editar_perfil.dart';
 import 'package:bookmet/pantalla_catalogo.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/registrarse.dart';
 import 'package:bookmet/inicio_sesion.dart';
+import 'package:bookmet/crear_producto.dart';
+
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -27,16 +30,60 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   Image.asset('assets/images/logo_bookmet.png', height: 40), 
                   
-                  // Botones de la barra superior
+                  
                   Row(
                     children: Auth.instance.chequearUsuario()==false ? [SizedBox(width: 20)] : [
                       TextButton(onPressed: () {}, child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 20),
-                      TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
+                      TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 20),
-                      TextButton(onPressed: () {}, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
+                      TextButton(onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
+
+                      }, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 30),
-                      IconButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));} , icon: const Icon(Icons.account_circle, size: 45, color: Color(0xFFE5853B))), // Ícono de perfil
+                      PopupMenuButton<String>(
+                      icon: const Icon(Icons.account_circle, size: 45, color: Color(0xFFE5853B)),
+  
+  onSelected: (String value) {
+    switch (value) {
+      case 'perfil':
+        // aqui falta la pestaña de mi perfil como el figma 
+      case 'editar':
+        Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));
+        break;
+      case 'cerrar_sesion':
+        Auth.instance.signOut(context);
+        break;
+    }
+  },
+  
+
+  itemBuilder: (BuildContext context) => [
+    const PopupMenuItem<String>(
+      value: 'perfil',
+      child: ListTile(
+        leading: Icon(Icons.person_outline),
+        title: Text('Mi Perfil'),
+      ),
+    ),
+    const PopupMenuItem<String>(
+      value: 'editar',
+      child: ListTile(
+        leading: Icon(Icons.edit_outlined),
+        title: Text('Editar Perfil'),
+      ),
+    ),
+    const PopupMenuDivider(), 
+    const PopupMenuItem<String>(
+      value: 'cerrar_sesion',
+      child: ListTile(
+        leading: Icon(Icons.logout, color: Colors.red),
+        title: Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+      ),
+    ),
+  ],
+),
                     ],
                   )
                 ],
@@ -67,47 +114,39 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 40),
 
-                  // Botones
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: Auth.instance.chequearUsuario()==true ? 
-                      [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE5853B), 
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  
+                  // Botones de Inicio de Sesión y Registro (Solo se muestran si NO está logueado)
+                  if (!Auth.instance.chequearUsuario())
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE5853B), 
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()),);},
+                          child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
-                        onPressed: () {Auth.instance.signOut(context);},
-                        child: const Text('Cerrar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      )
-                      ] : 
-                      [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE5853B), 
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        const SizedBox(width: 20),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFDAB9), 
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PagRegistro()),);},
+                          child: const Text('Crear cuenta', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
-                        onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()),);},
-                        child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(width: 20),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFDAB9), 
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PagRegistro()),);},
-                        child: const Text('Crear cuenta', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                      ],
+                    ),
+                ], 
+              ),  
             ),
+
+
 
             const SizedBox(height: 80),
 
@@ -127,21 +166,49 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Botón 1: Publicar
-                      _buildOptionButton(
-                        image: 'assets/images/Escoge la opcion 2.png', 
-                        title: 'Publicar',
-                        description: 'Sube tus libros, guías, apuntes o materiales y dales una segunda vida. Gestiona tus recursos de forma sencilla.',
-                        onTap: () { print("Click en Publicar"); },
-                      ),
+                    _buildOptionButton(
+                      image: 'assets/images/Escoge la opcion 2.png', 
+                      title: 'Publicar',
+                      description: 'Sube tus libros, guías, apuntes o materiales y dales una segunda vida. Gestiona tus recursos de forma sencilla.',
+                      onTap: () {
+                      if (Auth.instance.chequearUsuario()) {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                          content: Text("Debes iniciar sesión para publicar un material"),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()));
+                      }
+                     },
+                    ),
+                    
                       const SizedBox(width: 40), // Espacio entre botones
 
                       // Botón 2: Explorar Catálogo
-                      _buildOptionButton(
-                        image: 'assets/images/Escoge la opcion 1.png', 
-                        title: 'Explorar catálogo',
-                        description: 'Encuentra el material académico que necesitas. Filtra por carrera, materia o área de conocimiento.',
-                        onTap: () { print("Click en Catálogo"); },
+                    _buildOptionButton(
+                    image: 'assets/images/Escoge la opcion 1.png', 
+                    title: 'Explorar catálogo',
+                    description: 'Encuentra el material académico que necesitas. Filtra por carrera, materia o área de conocimiento.',
+                    onTap: () {
+                    if (Auth.instance.chequearUsuario()) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));
+                    } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                      content: Text("Debes iniciar sesión para explorar el catálogo"),
+                       backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
                       ),
+                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()));
+                    }
+                    },
+                  ),
+                  
                     ],
                   ),
                 ],
