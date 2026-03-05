@@ -9,11 +9,15 @@ import 'dart:typed_data';
 esto lo quite porque segun es lo que trae problemas y hace que sea mas lento pero creo que lo vamos a tener que 
 volver a poner para que la imagen se comprima y pueda guardarse mas rapido 
 */
+
+
 class CrearProducto extends StatefulWidget {
   const CrearProducto({super.key});
   @override
   State<CrearProducto> createState() => _CrearProductoState();
 }
+
+
 class _CrearProductoState extends State<CrearProducto> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController nombreController = TextEditingController();
@@ -41,42 +45,31 @@ class _CrearProductoState extends State<CrearProducto> {
       });
     }
   }
- // Revisar porque no me esta agarrando pero segun lo que busque esta es la forma de hacerlo mas pequeño (que se pueda poner la foto y que no sea muy pesado)
+
+
 Future<String?> _uploadImage() async {
-  if (_webImageBytes == null) return null;
-  
-  try {
-
-    setState(() => _isUploading = true);
-    /* esta es la logica de comprimir la imagen que la quite por ahora 
-    Uint8List compressedBytes = await FlutterImageCompress.compressWithList(
-      _webImageBytes!,
-      minWidth: 600,  
-      minHeight: 600,
-      quality: 25,    
-    );
-    */
-
-    String fileName = 'productos/${DateTime.now().millisecondsSinceEpoch}.jpg';
-    Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
-
-    UploadTask uploadTask = storageRef.putData(
-      _webImageBytes!, 
-      SettableMetadata(contentType: 'image/jpeg')
-    );
-
-    TaskSnapshot snapshot = await uploadTask;
-   
-    String downloadUrl = await snapshot.ref.getDownloadURL();
+    if (_webImageBytes == null) return null;
     
-    setState(() => _isUploading = false);
-    return downloadUrl;
+    try {
+      String fileName = 'productos/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
 
-  } catch (e) {
-    setState(() => _isUploading = false);
-    return null;
+      UploadTask uploadTask = storageRef.putData(
+        _webImageBytes!, 
+        SettableMetadata(contentType: 'image/jpeg')
+      );
+
+      // Límite de 15 segundos para evitar giro infinito (por ahora)
+      TaskSnapshot snapshot = await uploadTask.timeout(const Duration(seconds: 15));
+     
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+
+    } catch (e) {
+      print("Error al subir a Storage: $e");
+      return null;
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -114,11 +107,13 @@ Future<String?> _uploadImage() async {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-               
+
               const Text('Publicar un nuevo articulo', style: TextStyle(fontSize: 24)),
               const SizedBox(height: 5), 
               const Text('* campos obligatorios', style: TextStyle(fontSize: 10, color: Colors.red)),
               const SizedBox(height: 25),
+
+
               //nombre
               TextFormField(
                 controller: nombreController,
@@ -129,6 +124,7 @@ Future<String?> _uploadImage() async {
               validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
               ), 
               const SizedBox(height: 10),
+
               // marca/autor
               TextFormField(
                 controller: autorMarcaController,
@@ -144,7 +140,7 @@ Future<String?> _uploadImage() async {
               const SizedBox(height: 10),
 
             
-              
+              //Categoria 
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
                   label: Text.rich(TextSpan(children: [
@@ -161,6 +157,8 @@ Future<String?> _uploadImage() async {
                 validator: (value) => value == null ? 'Seleccione una categoría' : null,
               ),
               const SizedBox(height: 20),
+
+
               const Text("Estado de conservación:", style: TextStyle(fontWeight: FontWeight.bold)),
               Theme(
             data: Theme.of(context).copyWith(
@@ -275,6 +273,8 @@ Future<String?> _uploadImage() async {
         )
     );
   }
+
+
   void _publicarProducto() async {
   if (_formKey.currentState!.validate()) {
     if (estadoSeleccionado == null || tipoTransaccionSeleccionado == null){
@@ -283,26 +283,45 @@ Future<String?> _uploadImage() async {
         );
         return;
       }
-      if (_webImageBytes == null) { 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Por favor selecciona una imagen"), backgroundColor: Colors.red),
-        );
-        return;
+      //validacion de la imagen mientras tanto asi para que se cree la publicacion sin imagen
+      //if (_webImageBytes == null) { 
+        //ScaffoldMessenger.of(context).showSnackBar(
+          //const SnackBar(content: Text("Por favor selecciona una imagen"), backgroundColor: Colors.red),
+        //);
+        //return;
       }
 
-     try {
-   
-      String? imageUrl = await _uploadImage();
       
+     // 1. Inicia la ruedita
+      setState(() {
+        _isUploading = true;
+      });
 
-      if (imageUrl == null) {
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error al subir la imagen. Intenta de nuevo."), backgroundColor: Colors.red),
-        );
-        return; 
-      }
-     
+      try {
+        
+        // 2. Manejo de la imagen opcional
+        String imageUrl = ""; 
+        
+        if (_webImageBytes != null) {
+          String? uploadedUrl = await _uploadImage();
+          if (uploadedUrl != null) {
+            imageUrl = uploadedUrl;
+          }
+        }
+        
+        // 2. Intentamos subir la imagen
+        //String? imageUrl = await _uploadImage();
+        
+        //if (imageUrl == null) {
+          //if (mounted) {
+            //ScaffoldMessenger.of(context).showSnackBar(
+              //const SnackBar(content: Text("Error al subir la imagen. Revisa tu conexión o reglas de Storage."), backgroundColor: Colors.red),
+            //);
+          //}
+          //return;
+        //}
+       
+        // 3. Guardamos en Firestore
         await FirebaseFirestore.instance.collection('productos').add({
           'nombre': nombreController.text,
           'autor_marca': autorMarcaController.text,
@@ -316,15 +335,27 @@ Future<String?> _uploadImage() async {
           'image_url': imageUrl, 
         });
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Producto publicado"), backgroundColor: Colors.green),
-        );
-        Navigator.pop(context);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Producto publicado con éxito"), backgroundColor: Colors.green),
+          );
+          Navigator.pop(context); 
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error"), backgroundColor: Colors.red),
-        );
+        print("Error al guardar en Firestore: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Error al publicar el producto"), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        // 4. Se detiene la ruedita (para que no se quede pegado mientras)
+        if (mounted) {
+          setState(() {
+            _isUploading = false;
+          });
+        }
       }
     }
   }
-}
+//}

@@ -2,6 +2,7 @@ import 'package:bookmet/auth.dart';
 import 'package:bookmet/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 
 class EditarPerfil extends StatefulWidget {
   const EditarPerfil({super.key});
@@ -20,14 +21,14 @@ class _EditarPerfilState extends State<EditarPerfil> {
   Future<String> lastname = Auth().getApellido(Auth().getUid());
   Future<String> career = Auth().getCarrera(Auth().getUid());
   Future<String> id = Auth().getCarnet(Auth().getUid());
-  Future<String> pAdress = Auth().getPaypal(Auth().getUid());
+  //Future<String> pAdress = Auth().getPaypal(Auth().getUid());
   Future<String> wAdress = Auth().getWhatsapp(Auth().getUid());
   final TextEditingController apellidoController = TextEditingController();
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController carnetController = TextEditingController();
   final TextEditingController carreraController = TextEditingController();
   final TextEditingController whatsappController = TextEditingController();
-  final TextEditingController paypalController = TextEditingController();
+  //final TextEditingController paypalController = TextEditingController();
 
 
   @override
@@ -123,13 +124,21 @@ class _EditarPerfilState extends State<EditarPerfil> {
       children: [
         const Text("Datos personales", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
-        _buildTextField("Apellidos", apellidoController, lastname),
-        _buildTextField("Nombres", nombreController, name),
-        _buildTextField("Carnet/ID",carnetController, id),
-        _buildTextField("Correo Paypal", paypalController, pAdress),
+        _buildTextField("Apellidos", apellidoController, lastname, formatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')),
+        ]),
+        _buildTextField("Nombres", nombreController, name, formatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')),
+        ]),
+        _buildTextField("Carnet/ID", carnetController, id, formatters: [
+          FilteringTextInputFormatter.digitsOnly, // Solo acepta números
+          LengthLimitingTextInputFormatter(11), // límite máximo de dígitos del carnet de la Unimet
+        ]),
       ],
     );
   }
+
+
   
   Widget _crearCheck(String titulo) {
     return CheckboxListTile(
@@ -149,7 +158,9 @@ class _EditarPerfilState extends State<EditarPerfil> {
       children: [
         const Text("Datos académicos", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
-        _buildTextField("Carrera", carreraController, career),
+        _buildTextField("Carrera", carreraController, career, formatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')),
+        ]),
         _buildTextField("Link Whatsapp", whatsappController, wAdress),
         const SizedBox(height: 20),
         _crearCheck("Ingeniería"),
@@ -163,7 +174,8 @@ class _EditarPerfilState extends State<EditarPerfil> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController control, Future<String> futureString) {
+
+  Widget _buildTextField(String label, TextEditingController control, Future<String> futureString, {List<TextInputFormatter>? formatters}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -186,10 +198,11 @@ class _EditarPerfilState extends State<EditarPerfil> {
             }
               return TextFormField(
                 controller: control,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(borderSide: BorderSide(color: Colors.black)),
-                  enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.black)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                inputFormatters: formatters, 
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black)),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black)),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
               );
             }
@@ -198,6 +211,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
       ),
     );
   }
+
 
   Widget _buildActionButtons() {
     return SizedBox(
@@ -214,7 +228,6 @@ class _EditarPerfilState extends State<EditarPerfil> {
                       'intereses': seleccionados.entries.where((e) => e.value).map((e) => e.key).toList(),
                       'link_whatsapp':whatsappController.text,
                       'carnet_id':carnetController.text,
-                      'correo_paypal':paypalController.text,
           });
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

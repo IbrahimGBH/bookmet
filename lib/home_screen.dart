@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:bookmet/editar_perfil.dart';
 import 'package:bookmet/pantalla_catalogo.dart';
 import 'package:flutter/material.dart';
@@ -114,47 +115,39 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 40),
 
-                  // Botones
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: verificar.chequearUsuario()==true ? 
-                      [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE5853B), 
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  
+                  // Botones de Inicio de Sesión y Registro (Solo se muestran si NO está logueado)
+                  if (!verificar.chequearUsuario())
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE5853B), 
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()),);},
+                          child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
-                        onPressed: () {verificar.signOut(context);},
-                        child: const Text('Cerrar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      )
-                      ] : 
-                      [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE5853B), 
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        const SizedBox(width: 20),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFDAB9), 
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PagRegistro()),);},
+                          child: const Text('Crear cuenta', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
-                        onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()),);},
-                        child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(width: 20),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFDAB9), 
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PagRegistro()),);},
-                        child: const Text('Crear cuenta', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                      ],
+                    ),
+                ], 
+              ),  
             ),
+
+
 
             const SizedBox(height: 80),
 
@@ -174,21 +167,49 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Botón 1: Publicar
-                      _buildOptionButton(
-                        image: 'assets/images/Escoge la opcion 2.png', 
-                        title: 'Publicar',
-                        description: 'Sube tus libros, guías, apuntes o materiales y dales una segunda vida. Gestiona tus recursos de forma sencilla.',
-                        onTap: () { print("Click en Publicar"); },
-                      ),
+                    _buildOptionButton(
+                      image: 'assets/images/Escoge la opcion 2.png', 
+                      title: 'Publicar',
+                      description: 'Sube tus libros, guías, apuntes o materiales y dales una segunda vida. Gestiona tus recursos de forma sencilla.',
+                      onTap: () {
+                      if (verificar.chequearUsuario()) {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                          content: Text("Debes iniciar sesión para publicar un material"),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()));
+                      }
+                     },
+                    ),
+                    
                       const SizedBox(width: 40), // Espacio entre botones
 
                       // Botón 2: Explorar Catálogo
-                      _buildOptionButton(
-                        image: 'assets/images/Escoge la opcion 1.png', 
-                        title: 'Explorar catálogo',
-                        description: 'Encuentra el material académico que necesitas. Filtra por carrera, materia o área de conocimiento.',
-                        onTap: () { print("Click en Catálogo"); },
+                    _buildOptionButton(
+                    image: 'assets/images/Escoge la opcion 1.png', 
+                    title: 'Explorar catálogo',
+                    description: 'Encuentra el material académico que necesitas. Filtra por carrera, materia o área de conocimiento.',
+                    onTap: () {
+                    if (verificar.chequearUsuario()) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));
+                    } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                      content: Text("Debes iniciar sesión para explorar el catálogo"),
+                       backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
                       ),
+                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => InicioSesion()));
+                    }
+                    },
+                  ),
+                  
                     ],
                   ),
                 ],
