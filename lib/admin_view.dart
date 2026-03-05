@@ -3,7 +3,6 @@ import 'package:bookmet/auth.dart';
 
 class AdminView extends StatelessWidget {
   AdminView({super.key});
-  final Auth verificar = Auth();
   
 
   @override
@@ -33,7 +32,7 @@ class AdminView extends StatelessWidget {
         ),
         actions: [
           FutureBuilder(
-            future: verificar.getNombre(verificar.getUid()),
+            future: Auth.instance.getNombre(Auth.instance.getUid()),
             builder: (context, asyncSnapshot) {
               String nombre = asyncSnapshot.data ?? "";
               return Center(
@@ -42,7 +41,7 @@ class AdminView extends StatelessWidget {
                   child: SizedBox(
                     width: 200,
                     child: TextButton(
-                      onPressed: (){verificar.signOut(context);},
+                      onPressed: (){Auth.instance.signOut(context);},
                       child: Text(
                         "Admin: $nombre | Log Out",
                         style: TextStyle(color: Colors.white.withValues(), fontSize: 16),

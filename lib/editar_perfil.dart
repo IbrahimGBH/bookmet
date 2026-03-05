@@ -16,12 +16,12 @@ class _EditarPerfilState extends State<EditarPerfil> {
     "Turismo": false, "Comunicación": false, "Derecho": false, "Otros": false
   };
   //final Set<String> _selectedIntereses = {};
-  Future<String> name = Auth().getNombre(Auth().getUid());
-  Future<String> lastname = Auth().getApellido(Auth().getUid());
-  Future<String> career = Auth().getCarrera(Auth().getUid());
-  Future<String> id = Auth().getCarnet(Auth().getUid());
-  Future<String> pAdress = Auth().getPaypal(Auth().getUid());
-  Future<String> wAdress = Auth().getWhatsapp(Auth().getUid());
+  Future<String> name = Auth.instance.getNombre(Auth.instance.getUid());
+  Future<String> lastname = Auth.instance.getApellido(Auth.instance.getUid());
+  Future<String> career = Auth.instance.getCarrera(Auth.instance.getUid());
+  Future<String> id = Auth.instance.getCarnet(Auth.instance.getUid());
+  Future<String> pAdress = Auth.instance.getPaypal(Auth.instance.getUid());
+  Future<String> wAdress = Auth.instance.getWhatsapp(Auth.instance.getUid());
   final TextEditingController apellidoController = TextEditingController();
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController carnetController = TextEditingController();
@@ -206,7 +206,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
       child: ElevatedButton(
         onPressed: () async {
           try{
-          String userId = Auth().getUid();
+          String userId = Auth.instance.getUid();
           await FirebaseFirestore.instance.collection('usuarios').doc(userId).set({
                       'nombre': nombreController.text,
                       'apellido': apellidoController.text,

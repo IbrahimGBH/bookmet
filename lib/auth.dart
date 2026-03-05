@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Auth {
-  Auth();
+  Auth._internal();
+  static final Auth _instance = Auth._internal();
   final FirebaseAuth fAuth = FirebaseAuth.instance;
+
+  static Auth get instance => _instance;
 
   Future<UserCredential?> signInWithEmail(
     BuildContext context,

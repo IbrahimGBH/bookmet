@@ -9,7 +9,6 @@ class InicioSesion extends StatelessWidget {
   InicioSesion({super.key});
   final controllerUser = TextEditingController();
   final controllerPassword = TextEditingController();
-  final Auth verificar = Auth();
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +108,7 @@ class InicioSesion extends StatelessWidget {
                       ),
                     );
                     try {
-                      final cred = await verificar.signInWithEmail(
+                      final cred = await Auth.instance.signInWithEmail(
                         context,
                         email,
                         password,
@@ -121,10 +120,10 @@ class InicioSesion extends StatelessWidget {
                           ),
                         );
                       } else {
-                        String mensaje = await verificar.getNombre(
-                          verificar.getUid(),
+                        String mensaje = await Auth.instance.getNombre(
+                          Auth.instance.getUid(),
                         );
-                        bool esAdmin = await verificar.isAdmin(verificar.getUid());
+                        bool esAdmin = await Auth.instance.isAdmin(Auth.instance.getUid());
                         messenger.showSnackBar(
                           SnackBar(
                             content: Center(

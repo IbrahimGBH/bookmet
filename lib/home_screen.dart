@@ -7,7 +7,6 @@ import 'package:bookmet/inicio_sesion.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
-  final Auth verificar = Auth();
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +29,7 @@ class HomeScreen extends StatelessWidget {
                   
                   // Botones de la barra superior
                   Row(
-                    children: verificar.chequearUsuario()==false ? [SizedBox(width: 20)] : [
+                    children: Auth.instance.chequearUsuario()==false ? [SizedBox(width: 20)] : [
                       TextButton(onPressed: () {}, child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
                       const SizedBox(width: 20),
                       TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
@@ -71,7 +70,7 @@ class HomeScreen extends StatelessWidget {
                   // Botones
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: verificar.chequearUsuario()==true ? 
+                    children: Auth.instance.chequearUsuario()==true ? 
                       [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -79,7 +78,7 @@ class HomeScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: () {verificar.signOut(context);},
+                        onPressed: () {Auth.instance.signOut(context);},
                         child: const Text('Cerrar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       )
                       ] : 
