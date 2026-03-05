@@ -1,10 +1,10 @@
 import 'package:bookmet/home_screen.dart';
+import 'package:bookmet/tarjeta_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/crear_producto.dart';
 import 'package:bookmet/editar_perfil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'package:bookmet/auth.dart';
-import 'package:bookmet/detalle_producto.dart';
 
 
 class PantallaCatalogo extends StatefulWidget {
@@ -325,7 +325,10 @@ void _mostrarDialogoFiltros() {
         );
       }
 
-      return GridView.builder(
+      return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: 3, tarjetaSize: 400,);
+      
+      //comentado por si acaso, usar tarjeta builder
+      /*GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -351,16 +354,19 @@ void _mostrarDialogoFiltros() {
           String foto = data.containsKey('image_url') ? (data['image_url'] ?? "") : "";
 
           //Enviamos los datos a la tarjeta
-          return _tarjetaProducto(context, titulo, autor, precio, foto);
+          return TarjetaProducto(
+            titulo: titulo,
+            autor: autor,
+            precio: precio,
+            foto: foto,
+          );
         },
-
-
-      );
+      );*/
     },
   ),
 ),
             
-            const SizedBox(height: 100),
+           const SizedBox(height: 100),
           ]    
         ),
         
@@ -368,7 +374,7 @@ void _mostrarDialogoFiltros() {
     );
   }
 }
-Widget _tarjetaProducto(BuildContext context, String titulo, String autor, String precio, String foto) {
+/*Widget _tarjetaProducto(BuildContext context, String titulo, String autor, String precio, String foto) {
   return GestureDetector(
     onTap: () {
       Navigator.push(
@@ -413,4 +419,4 @@ Widget _tarjetaProducto(BuildContext context, String titulo, String autor, Strin
       ],
     ),
   );
-}
+}*/
