@@ -52,7 +52,7 @@ class DetalleProducto extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ChatScreen()),
+                   MaterialPageRoute(builder: (context) => const Scaffold(body: Center(child: Text('Chat en construcción 🚧')))),
                   );
                 },
                 child: const Text("Solicitar Intercambio", style: TextStyle(fontSize: 18, color: Colors.white)),

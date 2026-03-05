@@ -4,6 +4,7 @@ import 'package:bookmet/crear_producto.dart';
 import 'package:bookmet/editar_perfil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'package:bookmet/auth.dart';
+import 'package:bookmet/detalle_producto.dart';
 
 
 class PantallaCatalogo extends StatefulWidget {
@@ -351,7 +352,7 @@ void _mostrarDialogoFiltros() {
           String foto = data.containsKey('image_url') ? (data['image_url'] ?? "") : "";
 
           //Enviamos los datos a la tarjeta
-          return _tarjetaProducto(titulo, autor, precio, foto);
+          return _tarjetaProducto(context, titulo, autor, precio, foto);
         },
 
 
@@ -368,8 +369,22 @@ void _mostrarDialogoFiltros() {
     );
   }
 }
-Widget _tarjetaProducto(String titulo, String autor, String precio, String foto) {
-    return Column(
+Widget _tarjetaProducto(BuildContext context, String titulo, String autor, String precio, String foto) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetalleProducto(
+            titulo: titulo,
+            autor: autor,
+            precio: precio,
+            foto: foto,
+          ),
+        ),
+      );
+    },
+    child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Stack(
@@ -380,7 +395,6 @@ Widget _tarjetaProducto(String titulo, String autor, String precio, String foto)
                 height: 250,
                 width: double.infinity,
                 color: Colors.grey[300],
-                
                 child: foto != "" 
                     ? Image.network(foto, fit: BoxFit.cover) 
                     : const Icon(Icons.book, size: 50, color: Colors.grey),
@@ -395,8 +409,9 @@ Widget _tarjetaProducto(String titulo, String autor, String precio, String foto)
         ),
         const SizedBox(height: 10),
         Text(titulo, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1),
-        Text(autor, style: TextStyle(color: Colors.grey, fontSize: 12)),
-        Text(precio, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE5853B))),
+        Text(autor, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(precio, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
       ],
-    );
-  }
+    ),
+  );
+}
