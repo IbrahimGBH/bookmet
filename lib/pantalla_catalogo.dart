@@ -6,6 +6,7 @@ import 'package:bookmet/editar_perfil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/mi_perfil.dart';
+import 'detalle_producto.dart';
 
 
 class PantallaCatalogo extends StatefulWidget {
@@ -382,20 +383,21 @@ void _mostrarDialogoFiltros() {
     );
   }
 }
-/*Widget _tarjetaProducto(BuildContext context, String titulo, String autor, String precio, String foto) {
+Widget _tarjetaProducto(BuildContext context, String titulo, String autor, String precio, String foto) {
   return GestureDetector(
     onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DetalleProducto(
-            titulo: titulo,
-            autor: autor,
-            precio: precio,
-            foto: foto,
-          ),
-        ),
-      );
+      showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return DetalleProducto(
+      titulo: titulo,
+      autor: autor,
+      precio: precio,
+      imageUrl: foto, 
+      descripcion: 'Este material está disponible para intercambio o venta. Contacta al vendedor para más detalles.',
+    );
+  },
+);
     },
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,4 +429,4 @@ void _mostrarDialogoFiltros() {
       ],
     ),
   );
-}*/
+}

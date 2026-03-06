@@ -1,64 +1,133 @@
 import 'package:flutter/material.dart';
-import 'chat_screen.dart';
 
 class DetalleProducto extends StatelessWidget {
   final String titulo;
   final String autor;
   final String precio;
-  final String foto;
+  final String descripcion;
+  final String? imageUrl;
 
   const DetalleProducto({
     super.key,
     required this.titulo,
     required this.autor,
     required this.precio,
-    required this.foto,
+    required this.descripcion,
+    this.imageUrl,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(titulo),
-        backgroundColor: Colors.orange,
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: foto.isNotEmpty
-                  ? Image.network(foto, height: 300, fit: BoxFit.cover)
-                  : const Icon(Icons.book, size: 100, color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-            Text(titulo, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            Text(autor, style: const TextStyle(fontSize: 18, color: Colors.grey)),
-            const SizedBox(height: 10),
-            Text(precio, style: const TextStyle(fontSize: 20, color: Colors.orange, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            const Text("Descripción", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            const Text("Este material está disponible para intercambio o venta. Contacta al vendedor para más detalles."),
-            const SizedBox(height: 30),
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                   MaterialPageRoute(builder: (context) => const Scaffold(body: Center(child: Text('Chat en construcción 🚧')))),
-                  );
-                },
-                child: const Text("Solicitar Intercambio", style: TextStyle(fontSize: 18, color: Colors.white)),
-              ),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.rectangle,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10.0,
+              offset: Offset(0.0, 10.0),
             ),
           ],
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: imageUrl != null && imageUrl!.isNotEmpty
+                    ? Image.network(
+                        imageUrl!,
+                        width: double.infinity,
+                        height: 180,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        width: double.infinity,
+                        height: 180,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.book, size: 60, color: Colors.grey),
+                      ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                titulo,
+                style: const TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Publicado por $autor',
+                style: TextStyle(fontSize: 12.0, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Detalles del artículo:',
+                style: TextStyle(
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                descripcion,
+                style: TextStyle(fontSize: 12.0, color: Colors.grey[800]),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Tipo de transacción:',
+                style: TextStyle(
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                precio == '0' ? 'Intercambio' : 'Venta: \$$precio',
+                style: TextStyle(fontSize: 12.0, color: Colors.grey[800]),
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[200],
+                    foregroundColor: Colors.orange[900],
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  child: const Text(
+                    'Solicitar intercambio',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  'Estado: Disponible',
+                  style: TextStyle(fontSize: 10.0, color: Colors.grey[500]),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

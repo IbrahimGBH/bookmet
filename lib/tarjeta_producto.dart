@@ -19,17 +19,18 @@ class TarjetaProducto extends StatelessWidget {
   Widget build(BuildContext context) {
   return GestureDetector(
     onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DetalleProducto(
-            titulo: titulo,
-            autor: autor,
-            precio: precio,
-            foto: foto,
-          ),
-        ),
-      );
+      showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return DetalleProducto(
+      titulo: titulo,
+      autor: autor,
+      precio: precio,
+      imageUrl: foto, 
+      descripcion: 'Este material está disponible para intercambio o venta. Contacta al vendedor para más detalles.',
+    );
+  },
+);
     },
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
