@@ -5,6 +5,7 @@ import 'package:bookmet/crear_producto.dart';
 import 'package:bookmet/editar_perfil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'package:bookmet/auth.dart';
+import 'package:bookmet/mi_perfil.dart';
 
 
 class PantallaCatalogo extends StatefulWidget {
@@ -183,8 +184,15 @@ void _mostrarDialogoFiltros() {
         
               switch (value) {
                 case 'perfil':
-                  print("Navegar a Mi Perfil");
-                  break;
+                  showDialog(
+                    context: context,
+                    builder: (context){       
+                    Size? screenSize =  MediaQuery.of(context).size;
+                    final double dialogWidth = screenSize.width * 0.9;
+                    final double dialogHeight = screenSize.height * 0.85;
+                    return MiPerfil(dialogWidth: dialogWidth, dialogHeight: dialogHeight); 
+                    }
+                  );
                 case 'editar':
                   Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));
                   break;
@@ -325,7 +333,7 @@ void _mostrarDialogoFiltros() {
         );
       }
 
-      return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: 3, tarjetaSize: 400,);
+      return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: 3, tarjetaSize: 400, smallVersion: false,);
       
       //comentado por si acaso, usar tarjeta builder
       /*GridView.builder(

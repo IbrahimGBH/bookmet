@@ -1,4 +1,5 @@
 import 'package:bookmet/editar_perfil.dart';
+import 'package:bookmet/mi_perfil.dart';
 import 'package:bookmet/pantalla_catalogo.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
@@ -47,7 +48,15 @@ class HomeScreen extends StatelessWidget {
   onSelected: (String value) {
     switch (value) {
       case 'perfil':
-        // aqui falta la pestaña de mi perfil como el figma 
+    //TODO: revisar esta parte del código para asegurarse que no hayan errores
+        showDialog(
+          context: context,
+          builder: (context){       
+            Size? screenSize =  MediaQuery.of(context).size;
+            final double dialogWidth = screenSize.width * 0.9;
+            final double dialogHeight = screenSize.height * 0.85;
+            return MiPerfil(dialogWidth: dialogWidth, dialogHeight: dialogHeight); }
+        );
       case 'editar':
         Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));
         break;
