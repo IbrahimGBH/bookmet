@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/mi_perfil.dart';
 import 'detalle_producto.dart';
+import 'package:bookmet/dialogo_favoritos.dart';
 
 
 class PantallaCatalogo extends StatefulWidget {
@@ -155,7 +156,14 @@ void _mostrarDialogoFiltros() {
         ),
         actions: [
           TextButton(
-            onPressed: () {}, 
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context){
+                  return DialogoFavoritos();
+                },
+              );
+            }, 
             child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 15),
