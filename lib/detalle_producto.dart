@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'pantalla_editar_producto.dart';
 
 class DetalleProducto extends StatelessWidget {
   final String idProducto; 
@@ -152,9 +153,22 @@ class DetalleProducto extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        // AQUÍ IRA LA LÓGICA DE EDITAR MÁS ADELANTE
+                        // Cierra la ventana actual de detalles
                         Navigator.of(context).pop(); 
-                        print("Falta conectar la pantalla de editar");
+                        
+                        // Abre la nueva pantalla de edición
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PantallaEditarProducto(
+                              idProducto: idProducto,
+                              tituloActual: titulo,
+                              autorActual: autor,
+                              precioActual: precio,
+                              descripcionActual: descripcion,
+                            ),
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[100],
