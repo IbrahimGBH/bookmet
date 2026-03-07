@@ -48,6 +48,8 @@ class TarjetaProducto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return GestureDetector(
       onTap: () {
         showDialog(
@@ -85,10 +87,27 @@ class TarjetaProducto extends StatelessWidget {
               Positioned(
                 top: 10,
                 right: 10,
-                child: IconButton(
-                  icon: const Icon(Icons.favorite_border, color: Color(0xFFC0834A), size: 30),
-                  onPressed: () => _presionarCorazon(context),
-                ),
+                child: user == null 
+                  ? const Icon(Icons.favorite_border, color: Color(0xFFC0834A), size: 30)
+                  : StreamBuilder<DocumentSnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('usuarios')
+                          .doc(user.uid)
+                          .collection('favoritos')
+                          .doc(titulo)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        bool esFavorito = snapshot.hasData && snapshot.data!.exists;
+                        return IconButton(
+                          icon: Icon(
+                            esFavorito ? Icons.favorite : Icons.favorite_border, 
+                            color: const Color(0xFFC0834A), 
+                            size: 30
+                          ),
+                          onPressed: () => _presionarCorazon(context),
+                        );
+                      },
+                    ),
               ),
             ],
           ),

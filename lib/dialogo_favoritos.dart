@@ -14,14 +14,14 @@ class DialogoFavoritos extends StatelessWidget {
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)), // Sin redondeo, igual al Figma
       child: SizedBox(
-        width: 550, // Ajustado para que se vea amplio como en la captura
+        width: 550, 
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // BARRA NARANJA SUPERIOR
+            
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              color: const Color(0xFFEA983E), // El naranja exacto de BookMet
+              color: const Color(0xFFEA983E), 
               child: Row(
                 children: [
                   const Icon(Icons.favorite, color: Colors.white, size: 28),
@@ -65,7 +65,7 @@ class DialogoFavoritos extends StatelessWidget {
                           
                           // LISTA DE PRODUCTOS
                           ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 400), // Para que no crezca infinito
+                            constraints: const BoxConstraints(maxHeight: 400), 
                             child: ListView.builder(
                               shrinkWrap: true,
                               itemCount: docs.length,
@@ -106,7 +106,20 @@ class DialogoFavoritos extends StatelessWidget {
                                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                                                 ),
                                                 onPressed: () {
-                                                  // Muestra el detalle del producto
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (BuildContext context) {
+                                                      return DetalleProducto(
+                                                        idProducto: data['idProducto'] ?? docs[index].id,
+                                                        vendedorId: data['vendedor_id'] ?? '',
+                                                        titulo: data['nombre'] ?? 'Sin título',
+                                                        autor: data['autor_marca'] ?? 'Sin autor',
+                                                        precio: data['valor'] ?? '0',
+                                                        imageUrl: data['image_url'] ?? '',
+                                                        descripcion: 'Este material está disponible para intercambio o venta. Contacta al vendedor para más detalles.',
+                                                      );
+                                                    },
+                                                  );
                                                 },
                                                 child: const Text("Ver publicación", style: TextStyle(color: Colors.white, fontSize: 12)),
                                               ),
