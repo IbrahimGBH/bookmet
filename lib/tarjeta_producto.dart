@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';   
 
 class TarjetaProducto extends StatelessWidget {
+  final String idProducto; // NUEVO
+  final String vendedorId; // NUEVO
   final String titulo;
   final String autor;
   final String precio;
@@ -11,6 +13,8 @@ class TarjetaProducto extends StatelessWidget {
 
   const TarjetaProducto({
     super.key,
+    required this.idProducto, // NUEVO
+    required this.vendedorId, // NUEVO
     required this.titulo,
     required this.autor,
     required this.precio,
@@ -50,6 +54,8 @@ class TarjetaProducto extends StatelessWidget {
           context: context,
           builder: (BuildContext context) {
             return DetalleProducto(
+              idProducto: idProducto, // NUEVO
+              vendedorId: vendedorId, // NUEVO
               titulo: titulo,
               autor: autor,
               precio: precio,

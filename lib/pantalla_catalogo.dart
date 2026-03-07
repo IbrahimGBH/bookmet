@@ -23,6 +23,22 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
   List<String> estadosSeleccionados = [];
   List<String> transaccionesSeleccionadas = [];
 
+  // Variables para la barra de búsqueda
+  bool _estaBuscando = false;
+  String _textoBusqueda = "";
+  final TextEditingController _controladorBusqueda = TextEditingController();
+
+  // Función para normalizar texto (quitar acentos y pasar a minúsculas)
+  String _normalizarTexto(String texto) {
+    return texto.toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u');
+  }
+
 void _mostrarDialogoFiltros() {
     List<String> tempCategorias = List.from(categoriasSeleccionadas);
     List<String> tempEstados = List.from(estadosSeleccionados);
@@ -154,24 +170,73 @@ void _mostrarDialogoFiltros() {
             fit: BoxFit.contain,
           ),
         ),
+
         actions: [
+          // BARRA DE BÚSQUEDA CONDICIONAL
+          if (_estaBuscando)
+            Container(
+              width: 300, // Ancho de la barra de búsqueda
+              margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextField(
+                controller: _controladorBusqueda,
+                autofocus: true, // Para que el teclado se abra de una vez
+                decoration: InputDecoration(
+                  hintText: 'Buscar por nombre o autor...',
+                  hintStyle: const TextStyle(fontSize: 14),
+                  border: InputBorder.none,
+                  prefixIcon: const Icon(Icons.search, color: Color(0xFFC0834A)),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.grey),
+                    onPressed: () {
+                      setState(() {
+                        _estaBuscando = false;
+                        _textoBusqueda = "";
+                        _controladorBusqueda.clear();
+                      });
+                    },
+                  ),
+                ),
+                onChanged: (valor) {
+                  setState(() {
+                    _textoBusqueda = _normalizarTexto(valor);
+                  });
+                },
+              ),
+            )
+          else ...[
+            // LUPITA Y FAVORITOS (SOLO SE MUESTRAN SI NO SE ESTÁ BUSCANDO)
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.black, size: 28),
+              onPressed: () {
+                setState(() {
+                  _estaBuscando = true;
+                });
+              },
+            ),
+            TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return const DialogoFavoritos();
+                  },
+                );
+              },
+              child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            ),
+          ], // FIN BARRA DE BÚSQUEDA CONDICIONAL
+
+          const SizedBox(width: 15),
           TextButton(
             onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context){
-                  return DialogoFavoritos();
-                },
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
             }, 
-            child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(width: 15),
-          TextButton(onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
-
-                      }, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
-                      
+            child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))
+          ),            
                       
           const SizedBox(width: 15),
           TextButton(
@@ -317,11 +382,22 @@ void _mostrarDialogoFiltros() {
       var documentosFiltrados = snapshot.data!.docs.where((doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         
+        // 1. Filtros de botones
         bool pasaCategoria = categoriasSeleccionadas.isEmpty || categoriasSeleccionadas.contains(data['categoria']);
         bool pasaEstado = estadosSeleccionados.isEmpty || estadosSeleccionados.contains(data['estado']);
         bool pasaTransaccion = transaccionesSeleccionadas.isEmpty || transaccionesSeleccionadas.contains(data['tipo_transaccion']);
 
-        return pasaCategoria && pasaEstado && pasaTransaccion;
+        // 2. Filtro de la barra de búsqueda
+        bool pasaBusqueda = true;
+        if (_textoBusqueda.isNotEmpty) {
+          String nombreProducto = data.containsKey('nombre') ? _normalizarTexto(data['nombre']) : '';
+          String autorProducto = data.containsKey('autor_marca') ? _normalizarTexto(data['autor_marca']) : '';
+          
+          // Comprueba si el texto ingresado está contenido en el nombre o en el autor
+          pasaBusqueda = nombreProducto.contains(_textoBusqueda) || autorProducto.contains(_textoBusqueda);
+        }
+
+        return pasaCategoria && pasaEstado && pasaTransaccion && pasaBusqueda;
       }).toList();
 
       //Esto es por si no existen publicaciones con los filtros seleccionados diga que no hay
@@ -390,51 +466,4 @@ void _mostrarDialogoFiltros() {
       ),
     );
   }
-}
-Widget _tarjetaProducto(BuildContext context, String titulo, String autor, String precio, String foto) {
-  return GestureDetector(
-    onTap: () {
-      showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return DetalleProducto(
-      titulo: titulo,
-      autor: autor,
-      precio: precio,
-      imageUrl: foto, 
-      descripcion: 'Este material está disponible para intercambio o venta. Contacta al vendedor para más detalles.',
-    );
-  },
-);
-    },
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Container(
-                height: 250,
-                width: double.infinity,
-                color: Colors.grey[300],
-                child: foto != "" 
-                    ? Image.network(foto, fit: BoxFit.cover) 
-                    : const Icon(Icons.book, size: 50, color: Colors.grey),
-              ),
-            ),
-            const Positioned(
-              top: 10,
-              right: 10,
-              child: Icon(Icons.favorite_border, color: Color(0xFFC0834A), size: 30),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(titulo, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1),
-        Text(autor, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-        Text(precio, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
-      ],
-    ),
-  );
 }

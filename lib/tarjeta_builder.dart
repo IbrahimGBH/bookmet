@@ -35,8 +35,12 @@ class TarjetaBuilder extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemCount: flatList.length,
             itemBuilder: (context, index) {
+
+
               var producto = flatList[index];
               Map<String, dynamic> data = producto.data();
+              String idProducto = producto.id; 
+              String vendedorId = data.containsKey('vendedor_id') ? (data['vendedor_id'] ?? '') : '';
               String titulo = data.containsKey('nombre') ? (data['nombre'] ?? 'Sin título') : 'Sin título';
               String autor = data.containsKey('autor_marca') ? (data['autor_marca'] ?? 'Sin autor') : 'Sin autor';
               String precio = data.containsKey('valor') ? (data['valor'] ?? '0') : '0';
@@ -45,6 +49,8 @@ class TarjetaBuilder extends StatelessWidget {
                 width: 250,
                 margin: const EdgeInsets.only(right: 20),
                 child: TarjetaProducto(
+                  idProducto: idProducto, 
+                  vendedorId: vendedorId,
                   titulo: titulo,
                   autor: autor,
                   precio: precio,
@@ -69,13 +75,19 @@ class TarjetaBuilder extends StatelessWidget {
         ),
         itemCount: flatList.length,
         itemBuilder: (context, index) {
+
+
           var producto = flatList[index];
           Map<String, dynamic> data = producto.data();
+          String idProducto = producto.id; 
+          String vendedorId = data.containsKey('vendedor_id') ? (data['vendedor_id'] ?? '') : '';
           String titulo = data.containsKey('nombre') ? (data['nombre'] ?? 'Sin título') : 'Sin título';
           String autor = data.containsKey('autor_marca') ? (data['autor_marca'] ?? 'Sin autor') : 'Sin autor';
           String precio = data.containsKey('valor') ? (data['valor'] ?? '0') : '0';
           String foto = data.containsKey('image_url') ? (data['image_url'] ?? "") : "";
           return TarjetaProducto(
+            idProducto: idProducto, 
+            vendedorId: vendedorId,
             titulo: titulo,
             autor: autor,
             precio: precio,

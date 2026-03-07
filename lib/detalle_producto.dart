@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DetalleProducto extends StatelessWidget {
+  final String idProducto; 
+  final String vendedorId;
   final String titulo;
   final String autor;
   final String precio;
@@ -9,6 +13,8 @@ class DetalleProducto extends StatelessWidget {
 
   const DetalleProducto({
     super.key,
+    required this.idProducto, 
+    required this.vendedorId,
     required this.titulo,
     required this.autor,
     required this.precio,
@@ -16,8 +22,48 @@ class DetalleProducto extends StatelessWidget {
     this.imageUrl,
   });
 
+  // Función para mostrar la alerta de confirmación
+  void _mostrarDialogoEliminar(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('Eliminar publicación'),
+          content: const Text('¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(), // Cierra la alerta
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  // Borramos de Firebase usando el ID
+                  await FirebaseFirestore.instance.collection('productos').doc(idProducto).delete();
+                  
+                  Navigator.of(ctx).pop(); // Cierra la alerta
+                  Navigator.of(context).pop(); // Cierra la ventana de detalles
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Publicación eliminada'), backgroundColor: Colors.red),
+                  );
+                } catch (e) {
+                  print("Error al eliminar: $e");
+                }
+              },
+              child: const Text('Eliminar', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    bool esMiPublicacion = (currentUserId != null && currentUserId == vendedorId);
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
@@ -99,26 +145,62 @@ class DetalleProducto extends StatelessWidget {
                 style: TextStyle(fontSize: 12.0, color: Colors.grey[800]),
               ),
               const SizedBox(height: 24),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[200],
-                    foregroundColor: Colors.orange[900],
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+
+              if (esMiPublicacion)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center, 
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        // AQUÍ IRA LA LÓGICA DE EDITAR MÁS ADELANTE
+                        Navigator.of(context).pop(); 
+                        print("Falta conectar la pantalla de editar");
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[100],
+                        foregroundColor: Colors.blue[900],
+                        elevation: 0,
+                      ),
+                      child: const Text('Editar', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: const Text(
-                    'Solicitar intercambio',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    
+                    const SizedBox(width: 20), 
+
+                    ElevatedButton(
+                      onPressed: () => _mostrarDialogoEliminar(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[100],
+                        foregroundColor: Colors.red[900],
+                        elevation: 0,
+                      ),
+                      child: const Text('Eliminar', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                )
+
+              else
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange[200],
+                      foregroundColor: Colors.orange[900],
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: const Text(
+                      'Solicitar intercambio',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
-              ),
+
+
               const SizedBox(height: 8),
               Center(
                 child: Text(
