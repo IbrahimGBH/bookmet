@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pantalla_editar_producto.dart';
+import 'chat_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 class DetalleProducto extends StatelessWidget {
   final String idProducto; 
@@ -193,36 +196,95 @@ class DetalleProducto extends StatelessWidget {
                 )
 
               else
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange[200],
-                      foregroundColor: Colors.orange[900],
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                    child: const Text(
-                      'Solicitar intercambio',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-
-
-              const SizedBox(height: 8),
               Center(
-                child: Text(
-                  'Estado: Disponible',
-                  style: TextStyle(fontSize: 10.0, color: Colors.grey[500]),
-                ),
-              ),
-            ],
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[200],
+                    foregroundColor: Colors.orange[900],
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Confirmar solicitud'),
+                          content: const Text('¿Deseas iniciar el proceso de intercambio/compra de este producto?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context); // Cierra si dice NO
+                              },
+                              child: const Text('No', style: TextStyle(color: Colors.red)),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                              onPressed: () async {
+                                try {
+                                  // 1. Guardamos en Firebase (⚠️ CAMBIA idProducto POR TU VARIABLE REAL)
+                                  await FirebaseFirestore.instance.collection('productos').doc(idProducto).update({
+                                    'estado': 'Solicitado',
+                                    'solicitante_id': FirebaseAuth.instance.currentUser?.uid,
+                                  });
+
+                                  // 2. Verificamos que la app siga viva
+                                  if (!context.mounted) return;
+
+                                  // 3. Cerramos ambas ventanas flotantes
+                                  Navigator.pop(context); 
+                                  Navigator.pop(context); 
+
+                                  // 4. Viajamos al chat
+                                  // Buscamos los datos del dueño del libro en Firebase
+            DocumentSnapshot vendedorDoc = await FirebaseFirestore.instance
+                .collection('usuarios')
+                .doc(vendedorId) // <--- ¡Aquí está tu variable mágica!
+                .get();
+
+            if (!context.mounted) return; // Por si el usuario cierra la app rápido
+
+            if (vendedorDoc.exists && vendedorDoc.data() != null) {
+              Map<String, dynamic> vendedorData = vendedorDoc.data() as Map<String, dynamic>;
+              String linkWhatsapp = vendedorData['link_whatsapp'] ?? '';
+
+              if (linkWhatsapp.isNotEmpty) {
+                final Uri url = Uri.parse(linkWhatsapp);
+                // Esta es la orden que saca a la persona a WhatsApp
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No se pudo abrir WhatsApp 😕')),
+                  );
+                }
+              } else {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('El dueño no tiene WhatsApp registrado')),
+                  );
+              }
+            }
+                                } catch (e) {
+                                  print("🚨 ERROR EN FIREBASE: $e");
+                                }
+                              },
+                              child: const Text('Sí, iniciar proceso', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: const Text(
+                    'Solicitar producto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ), // Cierra el ElevatedButton
+              ), // <-- ¡AQUÍ ESTÁ EL PARÉNTESIS DEL CENTER QUE FALTABA!
+          ], // Cierra la lista de hijos (children) de la Columna principal
           ),
         ),
       ),

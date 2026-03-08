@@ -8,6 +8,9 @@ import 'package:bookmet/auth.dart';
 import 'package:bookmet/mi_perfil.dart';
 import 'detalle_producto.dart';
 import 'package:bookmet/dialogo_favoritos.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'editar_perfil.dart';
+
 
 
 class PantallaCatalogo extends StatefulWidget {
@@ -27,8 +30,119 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
   bool _estaBuscando = false;
   String _textoBusqueda = "";
   final TextEditingController _controladorBusqueda = TextEditingController();
+@override
+  void initState() {
+    super.initState();
+    // Esto hace que la revisión se ejecute justo cuando la pantalla termina de cargar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _verificarWhatsApp(); 
+      Future<void> _verificarSolicitudes() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-  // Función para normalizar texto (quitar acentos y pasar a minúsculas)
+    // 1. Buscamos en Firebase productos que sean MÍOS y que estén "Solicitados"
+    // (Asegúrate de cambiar 'usuario_id' por el nombre del campo donde guardas el dueño del producto)
+    final query = await FirebaseFirestore.instance
+        .collection('productos')
+        .where('id_vendedor', isEqualTo: user.uid) 
+        .where('estado', isEqualTo: 'Solicitado')
+        .get();
+
+    // 2. Si encontramos alguno, lanzamos la alerta
+    if (query.docs.isNotEmpty) {
+      for (var doc in query.docs) {
+        if (!mounted) return;
+        
+        final datosProducto = doc.data();
+        // Usamos await en el showDialog para que si tiene varios productos solicitados, salgan uno por uno
+        await showDialog(
+          context: context,
+          barrierDismissible: false, // No puede ignorar la notificación
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('¡Nueva Solicitud! 🎉'),
+              // Cambia 'titulo' por el campo donde guardas el nombre del libro/producto
+              content: Text('Alguien ha solicitado tu producto "${datosProducto['nombre']}".\n\n¿Confirmas que la venta/intercambio está en proceso?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    // Si el vendedor dice NO, el producto vuelve a estar Disponible para otros
+                    doc.reference.update({
+                      'estado': 'Disponible',
+                      'solicitante_id': FieldValue.delete(),
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('No, cancelar', style: TextStyle(color: Colors.red)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                  onPressed: () {
+                    // Si el vendedor dice SÍ, el producto pasa a "En proceso" y se bloquea
+                    doc.reference.update({'estado': 'En proceso'});
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Sí, confirmar', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+   }
+    
+   _verificarSolicitudes(); 
+  }); 
+} 
+
+  Future<void> _verificarWhatsApp() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final doc = await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).get();
+    
+    if (doc.exists) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      final String? whatsapp = data['link_whatsapp']; 
+
+      final regex = RegExp(r'(https?:\/\/)?(wa\.me\/|api\.whatsapp\.com\/send\?phone=)\d+');
+      bool esValido = whatsapp != null && whatsapp.isNotEmpty && regex.hasMatch(whatsapp);
+
+      if (!esValido) {
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false, 
+          builder: (BuildContext context) {
+            return PopScope( 
+              canPop: false, 
+              child: AlertDialog(
+                title: const Text('¡Atención! 🚨'),
+                content: const Text('Para poder usar Bookmet y hacer intercambios, es obligatorio tener un link válido de WhatsApp en tu perfil.'),
+                actions: [
+                  Center(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                      onPressed: () {
+                        Navigator.pop(context); 
+                        Navigator.push( 
+                          context,
+                          MaterialPageRoute(builder: (context) => const EditarPerfil()),
+                        );
+                      },
+                      child: const Text('Completar mi perfil', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }
+    }
+  }
   String _normalizarTexto(String texto) {
     return texto.toLowerCase()
         .replaceAll('á', 'a')
