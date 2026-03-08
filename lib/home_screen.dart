@@ -1,3 +1,4 @@
+import 'package:bookmet/dialogo_favoritos.dart';
 import 'package:bookmet/editar_perfil.dart';
 import 'package:bookmet/mi_perfil.dart';
 import 'package:bookmet/pantalla_catalogo.dart';
@@ -33,7 +34,13 @@ class HomeScreen extends StatelessWidget {
                   
                   Row(
                     children: Auth.instance.chequearUsuario()==false ? [SizedBox(width: 20)] : [
-                      TextButton(onPressed: () {}, child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500))),
+                      TextButton(onPressed: () {showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return const DialogoFavoritos();
+                        },);
+                      },
+                      child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 20),
                       TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 20),

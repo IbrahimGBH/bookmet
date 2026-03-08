@@ -10,6 +10,7 @@ class TarjetaProducto extends StatelessWidget {
   final String autor;
   final String precio;
   final String foto;
+  final String descripcion;
 
   const TarjetaProducto({
     super.key,
@@ -19,6 +20,7 @@ class TarjetaProducto extends StatelessWidget {
     required this.autor,
     required this.precio,
     required this.foto,
+    required this.descripcion,
   });
 
   //FUNCIÓN QUE AGREGA A FAVORITOS
@@ -39,9 +41,10 @@ class TarjetaProducto extends StatelessWidget {
     } else {
       await docRef.set({
         'nombre': titulo,
-        'autor_marca': autor,
-        'valor': precio,
+//        'autor_marca': autor,
+//        'valor': precio,
         'image_url': foto,
+        'id_producto': idProducto,
       });
     }
   }
@@ -62,7 +65,7 @@ class TarjetaProducto extends StatelessWidget {
               autor: autor,
               precio: precio,
               imageUrl: foto,
-              descripcion: 'Este material está disponible para intercambio o venta. Contacta al vendedor para más detalles.',
+              descripcion: descripcion,
             );
           },
         );
@@ -79,7 +82,7 @@ class TarjetaProducto extends StatelessWidget {
                   width: double.infinity,
                   color: Colors.grey[300],
                   child: foto != ""
-                      ? Image.network(foto, fit: BoxFit.cover)
+                      ? Image.network(foto, fit: BoxFit.fitHeight)
                       : const Icon(Icons.book, size: 50, color: Colors.grey),
                 ),
               ),

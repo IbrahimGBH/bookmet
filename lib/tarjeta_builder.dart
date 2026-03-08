@@ -45,6 +45,7 @@ class TarjetaBuilder extends StatelessWidget {
               String autor = data.containsKey('autor_marca') ? (data['autor_marca'] ?? 'Sin autor') : 'Sin autor';
               String precio = data.containsKey('valor') ? (data['valor'] ?? '0') : '0';
               String foto = data.containsKey('image_url') ? (data['image_url'] ?? "") : "";
+              String descripcion = data.containsKey('descripcion') ? (data['descripcion'] ?? "") : "";
               return Container(
                 width: 250,
                 margin: const EdgeInsets.only(right: 20),
@@ -55,6 +56,7 @@ class TarjetaBuilder extends StatelessWidget {
                   autor: autor,
                   precio: precio,
                   foto: foto,
+                  descripcion: descripcion,
                 ),
               );
             },
@@ -85,6 +87,7 @@ class TarjetaBuilder extends StatelessWidget {
           String autor = data.containsKey('autor_marca') ? (data['autor_marca'] ?? 'Sin autor') : 'Sin autor';
           String precio = data.containsKey('valor') ? (data['valor'] ?? '0') : '0';
           String foto = data.containsKey('image_url') ? (data['image_url'] ?? "") : "";
+          String descripcion = data.containsKey('descripcion') ? (data['descripcion'] ?? "") : "";
           return TarjetaProducto(
             idProducto: idProducto, 
             vendedorId: vendedorId,
@@ -92,6 +95,7 @@ class TarjetaBuilder extends StatelessWidget {
             autor: autor,
             precio: precio,
             foto: foto,
+            descripcion: descripcion,
           );
         },
       );

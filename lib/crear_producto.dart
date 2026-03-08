@@ -86,188 +86,205 @@ Future<String?> _uploadImage() async {
       ),
         child: Center(
         child: SingleChildScrollView(
-          child:Container(
-            width: 600, 
-          margin: const EdgeInsets.all(20),
-        padding:  const EdgeInsets.all(30),
-
-              decoration: BoxDecoration(
-                color: Colors.white, 
-                borderRadius: BorderRadius.circular(20), 
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-        child: Form(
-          key: _formKey, 
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child:Stack(
             children: [
-
-              const Text('Publicar un nuevo articulo', style: TextStyle(fontSize: 24)),
-              const SizedBox(height: 5), 
-              const Text('* campos obligatorios', style: TextStyle(fontSize: 10, color: Colors.red)),
-              const SizedBox(height: 25),
-
-
-              //nombre
-              TextFormField(
-                controller: nombreController,
-                decoration: const InputDecoration(label: Text.rich(TextSpan(children: [TextSpan(text: 'Nombre'),
-                TextSpan(text: '*', style: TextStyle(color: Colors.red)),])),
-                border: OutlineInputBorder(),
+              Container(
+                width: 600, 
+                margin: const EdgeInsets.all(20),
+                padding:  const EdgeInsets.all(30),
+                
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(20), 
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-              validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
-              ), 
-              const SizedBox(height: 10),
-
-              // marca/autor
-              TextFormField(
-                controller: autorMarcaController,
-                decoration: const InputDecoration(
-                  label: Text.rich(TextSpan(children: [
-                    TextSpan(text: 'Autor o Marca '),
-                    TextSpan(text: '*', style: TextStyle(color: Colors.red)),
-                  ])),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
-              ),
-              const SizedBox(height: 10),
-
+                    child: Form(
+            key: _formKey, 
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
             
-              //Categoria 
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  label: Text.rich(TextSpan(children: [
-                    TextSpan(text: 'Categoría '),
-                    TextSpan(text: '*', style: TextStyle(color: Colors.red)),
-                  ])),
-                  border: OutlineInputBorder(),
-                ),
-                value: categoriaSeleccionada,
-                items: ['Libros', 'Guías', 'Material Lab', 'Equipos', 'Otros']
-                    .map((label) => DropdownMenuItem(value: label, child: Text(label)))
-                    .toList(),
-                onChanged: (value) => setState(() => categoriaSeleccionada = value),
-                validator: (value) => value == null ? 'Seleccione una categoría' : null,
-              ),
-              const SizedBox(height: 20),
-
-
-              const Text("Estado de conservación:", style: TextStyle(fontWeight: FontWeight.bold)),
-              Theme(
-            data: Theme.of(context).copyWith(
-                 radioTheme: RadioThemeData(
-      fillColor: MaterialStateProperty.all(const Color(0xFFC0834A)), 
-            ),
-          ),
-              child: Row(
-                children: [
-                  Expanded(child: RadioListTile<String>(title: const Text("Nuevo"), value: "Nuevo", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
-                  Expanded(child: RadioListTile<String>(title: const Text("Como nuevo"), value: "Como nuevo", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
-                  Expanded(child: RadioListTile<String>(title: const Text("Desgastado"), value: "Desgastado", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
-                ],
-              ),
-              ),
-              const SizedBox(height: 10),
-
-              const Text("Tipo de transacción:", style: TextStyle(fontWeight: FontWeight.bold)),
-              Theme(
-  data: Theme.of(context).copyWith(
-    radioTheme: RadioThemeData(
-      fillColor: MaterialStateProperty.all(const Color(0xFFC0834A)), 
-    ),
-  ),
-  child: Row(
-                children: [
-                  Expanded(child: RadioListTile<String>(title: const Text("Intercambio"), value: "Intercambio", groupValue: tipoTransaccionSeleccionado, onChanged: (v) => setState(() => tipoTransaccionSeleccionado = v!))),
-                  Expanded(child: RadioListTile<String>(title: const Text("Venta"), value: "Venta", groupValue: tipoTransaccionSeleccionado, onChanged: (v) => setState(() => tipoTransaccionSeleccionado = v!))),
-                  Expanded(child: RadioListTile<String>(title: const Text("Gratis"), value: "Gratis", groupValue: tipoTransaccionSeleccionado, onChanged: (v) => setState(() => tipoTransaccionSeleccionado = v!))),
-                ],
-              ),
-              ),
-              const SizedBox(height: 10),
-              //valor
-              TextFormField(
-                controller: valorController,
-                decoration: InputDecoration(
-                  label: const Text.rich(TextSpan(children: [
-                    TextSpan(text: 'Valor / Precio '),
-                    TextSpan(text: '*', style: TextStyle(color: Colors.red)),
-                  ])),
-                  border: const OutlineInputBorder(),
-                  enabled: tipoTransaccionSeleccionado != 'Gratis', 
-                  hintText: tipoTransaccionSeleccionado == 'Gratis' ? 'No aplica' : '',
-                ),
-                keyboardType: tipoTransaccionSeleccionado == 'Venta' 
-                    ? TextInputType.number 
-                    : TextInputType.text,
-                validator: (value) {
-                  if (tipoTransaccionSeleccionado == 'Gratis') return null;
-                  if (value!.isEmpty) return 'Campo requerido';
-                  if (tipoTransaccionSeleccionado == 'Venta' && double.tryParse(value) == null) {
-                    return 'Debe ser un número';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
+                const Text('Publicar un nuevo articulo', style: TextStyle(fontSize: 24)),
+                const SizedBox(height: 5), 
+                const Text('* campos obligatorios', style: TextStyle(fontSize: 10, color: Colors.red)),
+                const SizedBox(height: 25),
+            
+            
+                //nombre
                 TextFormField(
-                controller: descripcionController,
-                decoration: const InputDecoration(
-                  label: Text.rich(TextSpan(children: [
-                    TextSpan(text: 'Descripción '),
-                    TextSpan(text: '*', style: TextStyle(color: Colors.red)),
-                  ])),
+                  controller: nombreController,
+                  decoration: const InputDecoration(label: Text.rich(TextSpan(children: [TextSpan(text: 'Nombre'),
+                  TextSpan(text: '*', style: TextStyle(color: Colors.red)),])),
                   border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
+                  ),
                 validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
-              ),
-              const SizedBox(height: 20),
-
-     
-
-            GestureDetector(
-                onTap: _pickImage,
-      child: Container(
-        height: 150,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.grey[100],
-        ),
-                          child: _isUploading
-            ? const Center(child: CircularProgressIndicator()) 
-            : _webImageBytes == null
-                ? const Icon(Icons.camera_alt, size: 50, color: Colors.grey)
-                : Image.memory(_webImageBytes!, fit: BoxFit.cover),
-      ),
-    ),
-                      const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC0834A), 
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ), 
+                const SizedBox(height: 10),
+            
+                // marca/autor
+                TextFormField(
+                  controller: autorMarcaController,
+                  decoration: const InputDecoration(
+                    label: Text.rich(TextSpan(children: [
+                      TextSpan(text: 'Autor o Marca '),
+                      TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                    ])),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
                 ),
-                  onPressed: _publicarProducto,
-                  child: const Text("Publicar", style: TextStyle(fontSize: 16)),
+                const SizedBox(height: 10),
+            
+              
+                //Categoria 
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    label: Text.rich(TextSpan(children: [
+                      TextSpan(text: 'Categoría '),
+                      TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                    ])),
+                    border: OutlineInputBorder(),
+                  ),
+                  value: categoriaSeleccionada,
+                  items: ['Libros', 'Guías', 'Material Lab', 'Equipos', 'Otros']
+                      .map((label) => DropdownMenuItem(value: label, child: Text(label)))
+                      .toList(),
+                  onChanged: (value) => setState(() => categoriaSeleccionada = value),
+                  validator: (value) => value == null ? 'Seleccione una categoría' : null,
+                ),
+                const SizedBox(height: 20),
+            
+            
+                const Text("Estado de conservación:", style: TextStyle(fontWeight: FontWeight.bold)),
+                Theme(
+              data: Theme.of(context).copyWith(
+                   radioTheme: RadioThemeData(
+                  fillColor: MaterialStateProperty.all(const Color(0xFFC0834A)), 
               ),
+            ),
+                child: Row(
+                  children: [
+                    Expanded(child: RadioListTile<String>(title: const Text("Nuevo"), value: "Nuevo", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
+                    Expanded(child: RadioListTile<String>(title: const Text("Como nuevo"), value: "Como nuevo", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
+                    Expanded(child: RadioListTile<String>(title: const Text("Desgastado"), value: "Desgastado", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
+                  ],
+                ),
+                ),
+                const SizedBox(height: 10),
+            
+                const Text("Tipo de transacción:", style: TextStyle(fontWeight: FontWeight.bold)),
+                Theme(
+              data: Theme.of(context).copyWith(
+                radioTheme: RadioThemeData(
+                  fillColor: MaterialStateProperty.all(const Color(0xFFC0834A)), 
+                ),
               ),
-            ],
-          )
-        )
-        )
+              child: Row(
+                  children: [
+                    Expanded(child: RadioListTile<String>(title: const Text("Intercambio"), value: "Intercambio", groupValue: tipoTransaccionSeleccionado, onChanged: (v) => setState(() => tipoTransaccionSeleccionado = v!))),
+                    Expanded(child: RadioListTile<String>(title: const Text("Venta"), value: "Venta", groupValue: tipoTransaccionSeleccionado, onChanged: (v) => setState(() => tipoTransaccionSeleccionado = v!))),
+                    Expanded(child: RadioListTile<String>(title: const Text("Gratis"), value: "Gratis", groupValue: tipoTransaccionSeleccionado, onChanged: (v) => setState(() => tipoTransaccionSeleccionado = v!))),
+                  ],
+                ),
+                ),
+                const SizedBox(height: 10),
+                //valor
+                TextFormField(
+                  controller: valorController,
+                  decoration: InputDecoration(
+                    label: const Text.rich(TextSpan(children: [
+                      TextSpan(text: 'Valor / Precio '),
+                      TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                    ])),
+                    border: const OutlineInputBorder(),
+                    enabled: tipoTransaccionSeleccionado != 'Gratis', 
+                    hintText: tipoTransaccionSeleccionado == 'Gratis' ? 'No aplica' : '',
+                  ),
+                  keyboardType: tipoTransaccionSeleccionado == 'Venta' 
+                      ? TextInputType.number 
+                      : TextInputType.text,
+                  validator: (value) {
+                    if (tipoTransaccionSeleccionado == 'Gratis') return null;
+                    if (value!.isEmpty) return 'Campo requerido';
+                    if (tipoTransaccionSeleccionado == 'Venta' && double.tryParse(value) == null) {
+                      return 'Debe ser un número';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 10),
+                  TextFormField(
+                  controller: descripcionController,
+                  decoration: const InputDecoration(
+                    label: Text.rich(TextSpan(children: [
+                      TextSpan(text: 'Descripción '),
+                      TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                    ])),
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                ),
+                const SizedBox(height: 20),
+            
+                 
+            
+              GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.grey[100],
+                    ),
+                            child: _isUploading
+              ? const Center(child: CircularProgressIndicator()) 
+              : _webImageBytes == null
+                  ? const Icon(Icons.camera_alt, size: 50, color: Colors.grey)
+                  : Image.memory(_webImageBytes!, fit: BoxFit.cover),
+                  ),
+                ),
+                        const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC0834A), 
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                    onPressed: _publicarProducto,
+                    child: const Text("Publicar", style: TextStyle(fontSize: 16)),
+                ),
+                ),
+              ],
+            )
+                    )
+                    ),
+                Positioned(
+                  top: 30,
+                  left: 30,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFFC0834A), size: 28),
+                      onPressed: () {
+                        Navigator.of(context).maybePop();
+                      },
+                      tooltip: 'Volver',
+                    ),
+                  ),
+                ),
+         ])
       )
         ),
         )
@@ -289,7 +306,7 @@ Future<String?> _uploadImage() async {
           //const SnackBar(content: Text("Por favor selecciona una imagen"), backgroundColor: Colors.red),
         //);
         //return;
-      }
+      
 
       
      // 1. Inicia la ruedita
@@ -355,6 +372,12 @@ Future<String?> _uploadImage() async {
             _isUploading = false;
           });
         }
+      }
+    } else if (nombreController.text.isEmpty || autorMarcaController.text.isEmpty || descripcionController.text.isEmpty || (tipoTransaccionSeleccionado != 'Gratis' && valorController.text.isEmpty || categoriaSeleccionada == null)) {
+         ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Por favor completa todos los campos obligatorios"), backgroundColor: Colors.red),
+        );
+        return;
       }
     }
   }

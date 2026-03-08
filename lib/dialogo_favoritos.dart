@@ -105,21 +105,42 @@ class DialogoFavoritos extends StatelessWidget {
                                                   elevation: 0,
                                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                                                 ),
-                                                onPressed: () {
-                                                  showDialog(
-                                                    context: context,
-                                                    builder: (BuildContext context) {
-                                                      return DetalleProducto(
-                                                        idProducto: data['idProducto'] ?? docs[index].id,
-                                                        vendedorId: data['vendedor_id'] ?? '',
-                                                        titulo: data['nombre'] ?? 'Sin título',
-                                                        autor: data['autor_marca'] ?? 'Sin autor',
-                                                        precio: data['valor'] ?? '0',
-                                                        imageUrl: data['image_url'] ?? '',
-                                                        descripcion: 'Este material está disponible para intercambio o venta. Contacta al vendedor para más detalles.',
+                                                onPressed: () async {
+                                                  final idProducto = data['id_producto'];
+                                                  if (idProducto == null) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(content: Text('No se encontró el ID del producto.')),
+                                                    );
+                                                    return;
+                                                  }
+                                                  try {
+                                                    final productoDoc = await FirebaseFirestore.instance.collection('productos').doc(idProducto).get();
+                                                    if (!productoDoc.exists) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        const SnackBar(content: Text('El producto no existe.')),
                                                       );
-                                                    },
-                                                  );
+                                                      return;
+                                                    }
+                                                    final producto = productoDoc.data()!;
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext context) {
+                                                        return DetalleProducto(
+                                                          idProducto: idProducto,
+                                                          vendedorId: producto['vendedor_id'] ?? '',
+                                                          titulo: producto['nombre'] ?? 'Sin título',
+                                                          autor: producto['autor_marca'] ?? 'Sin autor',
+                                                          precio: producto['valor']?.toString() ?? '0',
+                                                          imageUrl: producto['image_url'] ?? '',
+                                                          descripcion: producto['descripcion'] ?? 'Este material está disponible para intercambio o venta. Contacta al vendedor para más detalles.',
+                                                        );
+                                                      },
+                                                    );
+                                                  } catch (e) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(content: Text('Error al cargar el producto: $e')),
+                                                    );
+                                                  }
                                                 },
                                                 child: const Text("Ver publicación", style: TextStyle(color: Colors.white, fontSize: 12)),
                                               ),

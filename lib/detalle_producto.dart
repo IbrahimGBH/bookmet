@@ -96,8 +96,8 @@ class DetalleProducto extends StatelessWidget {
                     ? Image.network(
                         imageUrl!,
                         width: double.infinity,
-                        height: 180,
-                        fit: BoxFit.cover,
+                        height: 200,
+                        fit: BoxFit.fitHeight,
                       )
                     : Container(
                         width: double.infinity,
@@ -116,7 +116,7 @@ class DetalleProducto extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Publicado por $autor',
+                'Por: $autor',
                 style: TextStyle(fontSize: 12.0, color: Colors.grey[600]),
               ),
               const SizedBox(height: 16),
@@ -142,7 +142,7 @@ class DetalleProducto extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                precio == '0' ? 'Intercambio' : 'Venta: \$$precio',
+                precio == '0' ? 'Intercambio' : 'Venta: $precio',
                 style: TextStyle(fontSize: 12.0, color: Colors.grey[800]),
               ),
               const SizedBox(height: 24),
