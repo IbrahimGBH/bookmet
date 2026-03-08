@@ -170,14 +170,60 @@ Widget _buildBotonCerrar(BuildContext context) {
 }
 
 Widget _buildTarjetaSolicitud(BuildContext context) {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [const BoxShadow(color: Colors.black12, blurRadius: 10)],
-    ),
-    child: const Text("Por hacer :)", textAlign: TextAlign.center),
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('transacciones')
+        .where('comprador_id', isEqualTo: Auth.instance.getUid())
+        .where('estado', isEqualTo: 'pendiente')
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      var transacciones = snapshot.data!.docs;
+      if (transacciones.isEmpty) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 30.0),
+          child: Center(
+            child: Text(
+              "No tienes solicitudes pendientes.",
+              style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      }
+
+      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance.collection('productos').snapshots(),
+        builder: (context, prodSnapshot) {
+          if (!prodSnapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          var productosAll = prodSnapshot.data!.docs;
+          // Filtrar productos que están en las transacciones pendientes
+          var transIds = transacciones.map((t) => t['id_producto']).toSet();
+          var productos = productosAll.where((doc) => transIds.contains(doc.id)).toList();
+          if (productos.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 30.0),
+              child: Center(
+                child: Text(
+                  "No se encontraron productos para tus solicitudes.",
+                  style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+          return TarjetaBuilder(
+            filtro: [productos],
+            cantidadColumnas: productos.length,
+            tarjetaSize: 400,
+            smallVersion: true,
+          );
+        },
+      );
+    },
   );
 }

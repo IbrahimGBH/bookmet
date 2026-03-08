@@ -350,6 +350,7 @@ Future<String?> _uploadImage() async {
           'vendedor_id': FirebaseAuth.instance.currentUser?.uid,
           'fecha': Timestamp.now(),
           'image_url': imageUrl, 
+          'disponibilidad': 'disponible',
         });
         
         if (mounted) {
