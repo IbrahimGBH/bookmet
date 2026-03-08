@@ -132,7 +132,7 @@ Widget _buildItemLibro(BuildContext context) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
         
         var todosLosDocs = snapshot.data!.docs.cast<QueryDocumentSnapshot<Map<String, dynamic>>>();
-        var limitados = todosLosDocs.take(2).toList();
+        var limitados = todosLosDocs.take(3).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,43 +258,62 @@ Widget _buildTarjetaSolicitud(BuildContext context) {
 void _mostrarTodo(BuildContext context, String titulo, List<QueryDocumentSnapshot<Map<String, dynamic>>> listaCompleta, {bool esSolicitud = false}) {
   showDialog(
     context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.7,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(titulo, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFE5853B))),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Color(0xFFE5853B)),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const Divider(),
-            Expanded(
-              child: esSolicitud 
-                ? ListView.builder( // Si es solicitud, mostramos lista vertical
-                    itemCount: listaCompleta.length,
-                    itemBuilder: (context, index) => _buildFilaAccionSolicitud(listaCompleta[index]),
-                  )
-                : TarjetaBuilder( // Si es publicacion, seguimos con tu grid
-                    filtro: [listaCompleta],
-                    cantidadColumnas: 2,
-                    tarjetaSize: 350,
-                    smallVersion: false,
+    builder: (context) {
+      // Creamos un controlador explícito para vincular Scrollbar y la lista
+      final ScrollController scrollController = ScrollController();
+      return Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(titulo,
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFE5853B))),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFFE5853B)),
+                    onPressed: () => Navigator.pop(context),
                   ),
-            ),
-          ],
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: Scrollbar(
+                  // Asignamos el controlador al Scrollbar
+                  controller: scrollController,
+                  thumbVisibility: true, // Hace visible la barra siempre
+                  child: esSolicitud
+                      ? ListView.builder(
+                          // Asignamos EL MISMO controlador al ListView
+                          controller: scrollController,
+                          itemCount: listaCompleta.length,
+                          itemBuilder: (context, index) =>
+                              _buildFilaAccionSolicitud(listaCompleta[index]),
+                        )
+                      : TarjetaBuilder(
+                          // Si es publicacion, seguimos con tu grid
+                          scrollController: scrollController,
+                          isScrollable: true,
+                          filtro: [listaCompleta],
+                          cantidadColumnas: 2,
+                          tarjetaSize: 350,
+                          smallVersion: false,
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
 Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> transDoc) {

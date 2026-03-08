@@ -10,31 +10,50 @@ class Transaccion {
   Future<void> solicitarTransaccion(
     String idProducto,
     String vendedorId,
+    {String? propuesta}
   ) async {
     final producto = await ffStore
         .collection('productos')
         .doc(idProducto)
         .get();
-    switch (producto['tipo_transaccion']) {
+    
+    final String tipo = producto['tipo_transaccion'];
+    
+    // Datos base comunes
+    Map<String, dynamic> datosTransaccion = {
+      'id_producto': idProducto,
+      'vendedor_id': vendedorId,
+      'comprador_id': Auth.instance.getUid(),
+      'estado': 'pendiente',
+      'fecha_inicio': Timestamp.now(),
+      'fecha_confirmacion': null,
+      'confirmacion_vendedor': false,
+      'confirmacion_comprador': false,
+      'aceptada': false,
+      'tipo': tipo,
+    };
+
+    switch (tipo) {
       case 'Intercambio':
-      // Lógica para solicitar intercambio (por implementar)
+        // En intercambio guardamos la propuesta del comprador
+        if (propuesta != null) {
+          datosTransaccion['propuesta'] = propuesta;
+        }
+        break;
       case 'Venta':
       // Lógica para solicitar compra (por implementar)
+        return;
       case 'Gratis':
-        try {
+        //No se requiere más info
+        break;
+      default:
+        return;
+    }
+    try {
           DocumentReference transaccionRef = await ffStore
               .collection('transacciones')
-              .add({
-                'id_producto': idProducto,
-                'vendedor_id': vendedorId,
-                'comprador_id': Auth.instance.getUid(),
-                'estado': 'pendiente',
-                'fecha_inicio': Timestamp.now(),
-                'fecha_confirmacion': null,
-                'confirmacion_vendedor': false,
-                'confirmacion_comprador': false,
-                'aceptada':null,
-              });
+              .add(datosTransaccion);
+
           await ffStore.collection('productos').doc(idProducto).update({
             'disponibilidad': 'en transaccion',
           });
@@ -46,7 +65,7 @@ class Transaccion {
               .set({
                 'id_producto': idProducto,
                 'rol': 'vendedor',
-                'tipo': producto['tipo_transaccion'],
+                'tipo': tipo,
                 'estado': 'pendiente',
               });
           await ffStore
@@ -57,17 +76,12 @@ class Transaccion {
               .set({
                 'id_producto': idProducto,
                 'rol': 'comprador',
-                'tipo': producto['tipo_transaccion'],
+                'tipo': tipo,
                 'estado': 'pendiente',
               });
         } catch (e) {
           //manejar error
         }
-        break;
-      default:
-        // Manejar caso de tipo de transacción desconocido
-        break;
-    }
   }
 
   Future<void> finalizarTransaccion(String idTransaccion) async {

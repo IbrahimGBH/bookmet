@@ -7,6 +7,8 @@ class TarjetaBuilder extends StatelessWidget {
   final int cantidadColumnas;
   final int tarjetaSize;
   final bool smallVersion;
+  final ScrollController? scrollController;
+  final bool isScrollable;
 
   const TarjetaBuilder({
     super.key,
@@ -14,6 +16,8 @@ class TarjetaBuilder extends StatelessWidget {
     required this.cantidadColumnas,
     required this.tarjetaSize,
     required this.smallVersion,
+    this.scrollController,
+    this.isScrollable = false,
   });
   
 
@@ -66,8 +70,9 @@ class TarjetaBuilder extends StatelessWidget {
     } else {
       // Default: vertical grid
       return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
+        controller: scrollController,
+        shrinkWrap: !isScrollable,
+        physics: isScrollable ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: cantidadColumnas,
           crossAxisSpacing: 25,

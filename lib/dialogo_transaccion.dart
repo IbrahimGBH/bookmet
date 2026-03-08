@@ -1,6 +1,7 @@
 import 'package:bookmet/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/transaccion.dart';
+import 'package:bookmet/dialogo_calificacion.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -45,12 +46,26 @@ class TDialog extends StatelessWidget {
         final String vendedorIdTx = transactionData['vendedor_id'];
         final bool isSeller = currentUserId == vendedorIdTx;
         final bool isAccepted = transactionData['aceptada'] == true;
+        final String? propuesta = transactionData['propuesta'];
+        final String tipoTransaccion = transactionData['tipo'] ?? 'Desconocido';
 
         if (isSeller && !isAccepted) {
           // Seller must accept or reject
           return AlertDialog(
-            title: const Text("Aceptar intercambio"),
-            content: const Text("¿Deseas aceptar este intercambio? Si lo rechazas, la solicitud será eliminada."),
+            title: Text("Solicitud de $tipoTransaccion"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (tipoTransaccion == 'Intercambio' && propuesta != null) ...[
+                  const Text("Propuesta del comprador:", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE5853B))),
+                  const SizedBox(height: 5),
+                  Text(propuesta, style: const TextStyle(fontStyle: FontStyle.italic)),
+                  const SizedBox(height: 15),
+                ],
+                const Text("¿Deseas aceptar esta solicitud? Si la rechazas, será eliminada."),
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () async {
@@ -121,27 +136,62 @@ class TDialog extends StatelessWidget {
   }
 
   Widget _buildConfirmationDialog(BuildContext context) {
-    return AlertDialog(
-      title: const Text("Confirmar Solicitud"),
-      content: const Text("¿Estás seguro de que deseas solicitar este artículo?"),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text("Cancelar"),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Transaccion.instance.solicitarTransaccion(idProducto, vendedorId);
-            Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text("Solicitud enviada."),
-                  backgroundColor: Colors.green),
-            );
-          },
-          child: const Text("Confirmar"),
-        ),
-      ],
+    final TextEditingController propuestaController = TextEditingController();
+
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('productos').doc(idProducto).get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        final String tipo = data['tipo_transaccion'];
+
+        return AlertDialog(
+          title: Text("Confirmar $tipo"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("¿Estás seguro de que deseas solicitar este artículo?"),
+              if (tipo == 'Intercambio') ...[
+                const SizedBox(height: 20),
+                const Text("Tu oferta:", style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: propuestaController,
+                  decoration: const InputDecoration(
+                    hintText: "Ej: Te cambio mi libro de Física I...",
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancelar"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Transaccion.instance.solicitarTransaccion(
+                  idProducto, 
+                  vendedorId,
+                  propuesta: tipo == 'Intercambio' ? propuestaController.text : null
+                );
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text("Solicitud enviada."),
+                      backgroundColor: Colors.green),
+                );
+              },
+              child: const Text("Confirmar"),
+            ),
+          ],
+        );
+      }
     );
   }
 
@@ -164,7 +214,7 @@ class TDialog extends StatelessWidget {
         children: [
           Text("Estado actual: ${data['estado']}"),
           const SizedBox(height: 10),
-          Text("Tu confirmación: ${compradorConfirmo ? 'Sí' : 'No'}"),
+          Text("Confirmación del comprador: ${compradorConfirmo ? 'Sí' : 'No'}"),
           Text("Confirmación del vendedor: ${vendedorConfirmo ? 'Sí' : 'No'}"),
         ],
       ),
@@ -198,7 +248,7 @@ class TDialog extends StatelessWidget {
           child: Text(isSeller ? "Contactar Comprador" : "Contactar Vendedor"),
         ),
         ElevatedButton(
-          onPressed: compradorConfirmo
+          onPressed: (isSeller ? vendedorConfirmo : compradorConfirmo)
               ? null 
               : () async {
                   // Confirmar la entrega en Firestore
@@ -230,12 +280,13 @@ class TDialog extends StatelessWidget {
                 },
           child: const Text("Confirmar Entrega"),
         ),
-        TextButton(
-          onPressed: () {
-            _showCancelConfirmationDialog(context, transaction.id);
-          },
-          child: const Text("Cancelar Solicitud", style: TextStyle(color: Colors.red)),
-        ),
+        if (!(isSeller ? vendedorConfirmo : compradorConfirmo))
+          TextButton(
+            onPressed: () {
+              _showCancelConfirmationDialog(context, transaction.id);
+            },
+            child: const Text("Cancelar Solicitud", style: TextStyle(color: Colors.red)),
+          ),
       ],
     );
   }
@@ -275,75 +326,6 @@ class TDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text("Cerrar"),
-        ),
-      ],
-    );
-  }
-}
-
-class CalificacionDialog extends StatefulWidget {
-  final String vendedorId;
-  const CalificacionDialog({super.key, required this.vendedorId});
-
-  @override
-  State<CalificacionDialog> createState() => _CalificacionDialogState();
-}
-
-class _CalificacionDialogState extends State<CalificacionDialog> {
-  int _rating = 0; 
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text("¡Producto Recibido!", textAlign: TextAlign.center),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text("¿Qué tal fue tu experiencia con este vendedor?"),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (index) {
-              return IconButton(
-                
-                icon: Icon(
-                  index < _rating ? Icons.star : Icons.star_border,
-                  color: const Color(0xFFFFCD60),
-                  size: 35,
-                ),
-                onPressed: () => setState(() => _rating = index + 1),
-              );
-            }),
-          ),
-        ],
-      ),
-      actions: [
-        Center(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE5853B),
-              shape: const StadiumBorder()
-            ),
-            // El botón se deshabilita hasta que el usuario marque al menos una estrella
-            onPressed: _rating == 0 ? null : () async {
-              final ref = FirebaseFirestore.instance.collection('usuarios').doc(widget.vendedorId);
-              
-              await FirebaseFirestore.instance.runTransaction((tx) async {
-                DocumentSnapshot snap = await tx.get(ref);
-                if (snap.exists) {
-                  Map<String, dynamic> data = snap.data() as Map<String, dynamic>;
-                  // Calculamos los nuevos valores sumando lo que ya había
-                  int p = (data['rating_puntos'] ?? 0) + _rating;
-                  int v = (data['rating_votos'] ?? 0) + 1;
-                  tx.update(ref, {'rating_puntos': p, 'rating_votos': v});
-                }
-              });
-              
-              if (mounted) Navigator.pop(context); 
-            },
-            child: const Text("Enviar Calificación", style: TextStyle(color: Colors.white)),
-          ),
         ),
       ],
     );
