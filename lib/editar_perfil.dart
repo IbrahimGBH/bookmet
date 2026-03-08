@@ -161,7 +161,22 @@ class _EditarPerfilState extends State<EditarPerfil> {
         _buildTextField("Carrera", carreraController, career, formatters: [
           FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')),
         ]),
-        _buildTextField("Link Whatsapp", whatsappController, wAdress),
+      _buildTextField(
+  "Link Whatsapp", 
+  whatsappController, 
+  wAdress,
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El link de WhatsApp es 100% obligatorio';
+    }
+    final regex = RegExp(r'(https?:\/\/)?(wa\.me\/|api\.whatsapp\.com\/send\?phone=)\d+');
+    
+    if (!regex.hasMatch(value)) {
+      return 'Ingresa un link válido (ej: https://wa.me/584140000000)';
+    }
+    return null; 
+  },
+),
         const SizedBox(height: 20),
         _crearCheck("Ingeniería"),
         _crearCheck("Psicología"),
@@ -175,7 +190,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
   }
 
 
-  Widget _buildTextField(String label, TextEditingController control, Future<String> futureString, {List<TextInputFormatter>? formatters}) {
+  Widget _buildTextField(String label, TextEditingController control, Future<String> futureString, {List<TextInputFormatter>? formatters, String? Function(String?)? validator}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -204,6 +219,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
                   enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black)),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
+                validator: validator,
               );
             }
           ),

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pantalla_editar_producto.dart';
 
+
 class DetalleProducto extends StatelessWidget {
   final String idProducto; 
   final String vendedorId;

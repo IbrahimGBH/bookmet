@@ -2,6 +2,7 @@ import 'package:bookmet/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/transaccion.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TDialog extends StatelessWidget {
   final String idProducto;
@@ -169,11 +170,30 @@ class TDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text("Función para contactar no implementada.")),
-            );
+          onPressed: () async {
+            try{
+              if (!context.mounted) return; // Por si el usuario cierra la app rápido
+              DocumentSnapshot vendedorDoc = await FirebaseFirestore.instance
+                  .collection('usuarios')
+                  .doc(vendedorId) // <--- ¡Aquí está tu variable mágica!
+                  .get();
+              if (vendedorDoc.exists && vendedorDoc.data() != null) {
+                Map<String, dynamic> vendedorData = vendedorDoc.data() as Map<String, dynamic>;
+                String linkWhatsapp = vendedorData['link_whatsapp'] ?? '';
+
+                if (linkWhatsapp.isNotEmpty) {
+                  final Uri url = Uri.parse(linkWhatsapp);
+                  // Esta es la orden que saca a la persona a WhatsApp
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                }
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("No se pudo abrir WhatsApp."), backgroundColor: Colors.red),
+              );
+            }
           },
           child: Text(isSeller ? "Contactar Comprador" : "Contactar Vendedor"),
         ),
