@@ -230,6 +230,8 @@ class _PagRegistroState extends State<PagRegistro> {
                         'link_whatsapp':whatsappController.text,
                         'carnet_id':carnetController.text,
                         'correo_paypal': "",
+                        'rating_puntos': 0,
+                        'rating_votos': 0,
                       });
 
                       ScaffoldMessenger.of(context).showSnackBar(

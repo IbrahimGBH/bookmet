@@ -66,10 +66,12 @@ class _MiPerfilState extends State<MiPerfil> {
 
 
 Widget _buildHeader(BuildContext context) {
-  Future<String> get_nombreUsuario() async{
-    String nombre = await Auth.instance.getNombre(Auth.instance.getUid());
-    String apellido = await Auth.instance.getApellido(Auth.instance.getUid());
-  return "$nombre $apellido";
+  Future<Map<String, dynamic>> get_datosUsuario() async {
+    DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(Auth.instance.getUid())
+        .get();
+    return doc.data() as Map<String, dynamic>;
   }
   return Wrap(
     alignment: WrapAlignment.start,
@@ -81,19 +83,35 @@ Widget _buildHeader(BuildContext context) {
         backgroundColor: Colors.grey,
         child: Icon(Icons.person, size: 50, color: Colors.white),
       ),
-      FutureBuilder(
-        future: get_nombreUsuario(),
+      FutureBuilder<Map<String, dynamic>>(
+        future: get_datosUsuario(),
         builder: (context, asyncSnapshot) {
+          if (!asyncSnapshot.hasData) return const Text("Cargando...");
+          
+          var data = asyncSnapshot.data!;
+          String nombreCompleto = "${data['nombre']} ${data['apellido']}";
+          
+     
+          int puntos = data['rating_puntos'] ?? 0;
+          int votos = data['rating_votos'] ?? 0;
+          double promedio = votos > 0 ? puntos / votos : 0.0;
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                asyncSnapshot.data ?? "---Cargando---",
-                style: TextStyle(color: Color(0xFFE5853B), fontSize: 24, fontWeight: FontWeight.bold),
+                nombreCompleto,
+                style: const TextStyle(color: Color(0xFFE5853B), fontSize: 24, fontWeight: FontWeight.bold),
               ),
               Row(
-                //más tarde habrá que cambiar esto por un código que cree las estrellas en función de las calificaciones.
-                children: List.generate(5, (index) => const Icon(Icons.star, color: Color(0xFFFFCD60), size: 18)),
+                
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < promedio.round() ? Icons.star : Icons.star_border, 
+                    color: const Color(0xFFFFCD60), 
+                    size: 18
+                  );
+                }),
               ),
               const Text("UNIMET", style: TextStyle(color: Colors.grey)),
             ],
@@ -296,12 +314,12 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(50), // Forma de cápsula como tu captura
+          borderRadius: BorderRadius.circular(50), 
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
-            // Imagen del libro pequeña
+         
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
@@ -313,7 +331,7 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
               ),
             ),
             const SizedBox(width: 12),
-            // Info y Botones
+            
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
