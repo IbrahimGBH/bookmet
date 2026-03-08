@@ -3,21 +3,31 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/tarjeta_builder.dart';
+import 'transaccion.dart';
 
-class MiPerfil extends StatelessWidget {
+
+class MiPerfil extends StatefulWidget {
   final double dialogWidth;
   final double dialogHeight; 
   const MiPerfil({super.key,required this.dialogWidth, required this.dialogHeight});
   
+@override
+  State<MiPerfil> createState() => _MiPerfilState();
+}
 
+class _MiPerfilState extends State<MiPerfil> {
+  // Variables para controlar el "Ver más"
+  bool verTodasPublicaciones = false;
+  bool verTodasSolicitudes = false;
   @override
+
   Widget build(BuildContext context) {
     return Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
         child: Container(
-          width: dialogWidth > 581 ? 581 : dialogWidth,
-          height: dialogHeight,
+          width: widget.dialogWidth > 581 ? 581 : widget.dialogWidth ,
+          height: widget.dialogHeight,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(25),
@@ -34,29 +44,26 @@ class MiPerfil extends StatelessWidget {
                     children: [
                       _buildHeader(context),
                       const SizedBox(height: 24),
-                      _buildSeccionTitulo("Mis publicaciones:"),
-                        
-                      _buildItemLibro(),
-                      
-                      const SizedBox(height: 6),
-                      _buildSeccionTitulo("Mis solicitudes:"),
-                      
-                      _buildTarjetaSolicitud(context),
-                      const SizedBox(height: 24),
-          
-                      const SizedBox(height: 30),
-                      _buildBotonesAccion(context),
-                    ],
-                  ),
+                      _buildItemLibro(context),
+                    
+                    const SizedBox(height: 6),
+                    
+                    // Solicitudes
+                    _buildTarjetaSolicitud(context),
+                    
+                    const SizedBox(height: 30),
+                    _buildBotonesAccion(context),
+                  ],
                 ),
-                _buildBotonCerrar(context),
-              ],
-            ),
+              ),
+              _buildBotonCerrar(context),
+            ],
           ),
         ),
-      );
-    }
-}
+      ),
+    );
+  }
+
 
 Widget _buildHeader(BuildContext context) {
   Future<String> get_nombreUsuario() async{
@@ -97,37 +104,37 @@ Widget _buildHeader(BuildContext context) {
   );
 }
 
-Widget _buildItemLibro() {
-    return StreamBuilder(
-    stream: FirebaseFirestore.instance.collection('productos').snapshots(),
-    builder: (context, snapshot) {
-      
-      if (!snapshot.hasData) return const CircularProgressIndicator();
-      var documentosFiltrados = snapshot.data!.docs.where((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        List<String> userId = [Auth.instance.getUid()];
-        bool pasaCategoria = userId.isEmpty || userId.contains(data['vendedor_id']);
-        return pasaCategoria;
-      }).toList();
-      if (documentosFiltrados.isEmpty) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 50.0),
-          child: Center(
-            child: Text(
-              "No se encontraron publicaciones con los filtros seleccionados.",
-              style: TextStyle(
-                fontSize: 16, 
-                color: Colors.grey, 
-                fontWeight: FontWeight.bold
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        );
-      }
+Widget _buildItemLibro(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('productos')
+          .where('vendedor_id', isEqualTo: Auth.instance.getUid())
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const CircularProgressIndicator();
+        
+        var todosLosDocs = snapshot.data!.docs.cast<QueryDocumentSnapshot<Map<String, dynamic>>>();
+        var limitados = todosLosDocs.take(2).toList();
 
-      return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: documentosFiltrados.length, tarjetaSize: 400, smallVersion: true,);
-});}
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSeccionTitulo("Mis publicaciones:", alPresionarVerMas: () {
+              _mostrarTodo(context, "Todas mis publicaciones", todosLosDocs);
+            }),
+            TarjetaBuilder(
+              filtro: [limitados], 
+              cantidadColumnas: limitados.length, 
+              tarjetaSize: 400, 
+              smallVersion: true,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
 Widget _buildBotonesAccion(BuildContext context) {
   return Row(
@@ -151,10 +158,17 @@ Widget _buildBotonesAccion(BuildContext context) {
   );
 }
 
-Widget _buildSeccionTitulo(String titulo) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Text(titulo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+Widget _buildSeccionTitulo(String titulo, {VoidCallback? alPresionarVerMas}) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(titulo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      if (alPresionarVerMas != null)
+        TextButton(
+          onPressed: alPresionarVerMas,
+          child: const Text("Ver más", style: TextStyle(color: Color(0xFFE5853B), fontSize: 14)),
+        ),
+    ],
   );
 }
 
@@ -168,7 +182,7 @@ Widget _buildBotonCerrar(BuildContext context) {
     ),
   );
 }
-
+// aqui cambie un pelo el codigo para que salga el boton de ver mas y todas las solicitudes pendientes.
 Widget _buildTarjetaSolicitud(BuildContext context) {
   return StreamBuilder<QuerySnapshot>(
     stream: FirebaseFirestore.instance
@@ -177,53 +191,176 @@ Widget _buildTarjetaSolicitud(BuildContext context) {
         .where('estado', isEqualTo: 'pendiente')
         .snapshots(),
     builder: (context, snapshot) {
-      if (!snapshot.hasData) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      var transacciones = snapshot.data!.docs;
+      if (!snapshot.hasData) return const CircularProgressIndicator();
+      
+
+      var transacciones = snapshot.data!.docs.cast<QueryDocumentSnapshot<Map<String, dynamic>>>();
+      
       if (transacciones.isEmpty) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 30.0),
-          child: Center(
-            child: Text(
-              "No tienes solicitudes pendientes.",
-              style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSeccionTitulo("Mis solicitudes:"),
+            const Text("No tienes solicitudes pendientes.", style: TextStyle(color: Colors.grey)),
+          ],
         );
       }
 
       return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.collection('productos').snapshots(),
         builder: (context, prodSnapshot) {
-          if (!prodSnapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          if (!prodSnapshot.hasData) return const SizedBox();
+          
           var productosAll = prodSnapshot.data!.docs;
-          // Filtrar productos que están en las transacciones pendientes
           var transIds = transacciones.map((t) => t['id_producto']).toSet();
-          var productos = productosAll.where((doc) => transIds.contains(doc.id)).toList();
-          if (productos.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 30.0),
-              child: Center(
-                child: Text(
-                  "No se encontraron productos para tus solicitudes.",
-                  style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
+          
+          var productosRelacionados = productosAll.where((doc) => transIds.contains(doc.id)).toList();
+          var limitados = productosRelacionados.take(2).toList();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+
+              _buildSeccionTitulo("Mis solicitudes:", alPresionarVerMas: () {
+                _mostrarTodo(context, "Todas mis solicitudes", transacciones, esSolicitud: true);
+              }),
+              TarjetaBuilder(
+                filtro: [limitados],
+                cantidadColumnas: limitados.length,
+                tarjetaSize: 400,
+                smallVersion: true,
               ),
-            );
-          }
-          return TarjetaBuilder(
-            filtro: [productos],
-            cantidadColumnas: productos.length,
-            tarjetaSize: 400,
-            smallVersion: true,
+            ],
           );
         },
       );
     },
   );
+}
+void _mostrarTodo(BuildContext context, String titulo, List<QueryDocumentSnapshot<Map<String, dynamic>>> listaCompleta, {bool esSolicitud = false}) {
+  showDialog(
+    context: context,
+    builder: (context) => Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(titulo, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFE5853B))),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Color(0xFFE5853B)),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const Divider(),
+            Expanded(
+              child: esSolicitud 
+                ? ListView.builder( // Si es solicitud, mostramos lista vertical
+                    itemCount: listaCompleta.length,
+                    itemBuilder: (context, index) => _buildFilaAccionSolicitud(listaCompleta[index]),
+                  )
+                : TarjetaBuilder( // Si es publicacion, seguimos con tu grid
+                    filtro: [listaCompleta],
+                    cantidadColumnas: 2,
+                    tarjetaSize: 350,
+                    smallVersion: false,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> transDoc) {
+  final transData = transDoc.data();
+  final String idProducto = transData['id_producto'];
+  final String idTransaccion = transDoc.id;
+
+  return FutureBuilder<DocumentSnapshot>(
+    future: FirebaseFirestore.instance.collection('productos').doc(idProducto).get(),
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()));
+      
+      var productoData = snapshot.data!.data() as Map<String, dynamic>;
+
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(50), // Forma de cápsula como tu captura
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          children: [
+            // Imagen del libro pequeña
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                productoData['imagen_url'] ?? '',
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey, width: 60, height: 60),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Info y Botones
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "EN PROGRESO - ${productoData['nombre']}",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _botonAccion("Aceptar solicitud", const Color(0xFF6ABF97), () {
+                        Transaccion.instance.aceptarSolicitud(idTransaccion);
+                      }),
+                      const SizedBox(width: 8),
+                      _botonAccion("Rechazar solicitud", const Color(0xFFB54D43), () {
+                        Transaccion.instance.eliminarTransaccion(idTransaccion);
+                      }),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget _botonAccion(String texto, Color color, VoidCallback onTap) {
+  return Expanded(
+    child: InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          texto,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+        ),
+      ),
+    ),
+  );
+}
 }
