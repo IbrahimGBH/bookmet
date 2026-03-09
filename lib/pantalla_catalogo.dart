@@ -8,6 +8,7 @@ import 'package:bookmet/auth.dart';
 import 'package:bookmet/mi_perfil.dart';
 import 'package:bookmet/dialogo_favoritos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:bookmet/dialogo_transaccion.dart';
 
 
 
@@ -38,49 +39,51 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // 1. Buscamos en Firebase productos que sean MÍOS y que estén "Solicitados"
-    // (Asegúrate de cambiar 'usuario_id' por el nombre del campo donde guardas el dueño del producto)
+    // 1. Buscamos en 'transacciones' solicitudes pendientes para este vendedor
     final query = await FirebaseFirestore.instance
-        .collection('productos')
-        .where('id_vendedor', isEqualTo: user.uid) 
-        .where('estado', isEqualTo: 'Solicitado')
+        .collection('transacciones')
+        .where('vendedor_id', isEqualTo: user.uid)
+        .where('estado', isEqualTo: 'pendiente')
+        .where('aceptada', isEqualTo: false)
         .get();
 
     // 2. Si encontramos alguno, lanzamos la alerta
     if (query.docs.isNotEmpty) {
-      for (var doc in query.docs) {
+      for (var txDoc in query.docs) {
         if (!mounted) return;
         
-        final datosProducto = doc.data();
-        // Usamos await en el showDialog para que si tiene varios productos solicitados, salgan uno por uno
+        final datosTx = txDoc.data();
+        final String idProducto = datosTx['id_producto'];
+        
+        // Obtenemos datos del producto para el mensaje
+        final prodDoc = await FirebaseFirestore.instance.collection('productos').doc(idProducto).get();
+        final String nombreProducto = prodDoc.exists ? (prodDoc.data()?['nombre'] ?? 'un artículo') : 'un artículo';
+
         await showDialog(
           context: context,
-          barrierDismissible: false, // No puede ignorar la notificación
+          barrierDismissible: false,
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('¡Nueva Solicitud! 🎉'),
-              // Cambia 'titulo' por el campo donde guardas el nombre del libro/producto
-              content: Text('Alguien ha solicitado tu producto "${datosProducto['nombre']}".\n\n¿Confirmas que la venta/intercambio está en proceso?'),
+              content: Text('Alguien ha solicitado tu producto "$nombreProducto".\n\n¿Deseas ver la solicitud?'),
               actions: [
                 TextButton(
                   onPressed: () {
-                    // Si el vendedor dice NO, el producto vuelve a estar Disponible para otros
-                    doc.reference.update({
-                      'estado': 'Disponible',
-                      'solicitante_id': FieldValue.delete(),
-                    });
                     Navigator.pop(context);
                   },
-                  child: const Text('No, cancelar', style: TextStyle(color: Colors.red)),
+                  child: const Text('Luego', style: TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                   onPressed: () {
-                    // Si el vendedor dice SÍ, el producto pasa a "En proceso" y se bloquea
-                    doc.reference.update({'estado': 'En proceso'});
                     Navigator.pop(context);
+                    // Abrimos el diálogo existente que gestiona la transacción
+                    showDialog(
+                      context: context,
+                      builder: (context) => TDialog(idProducto: idProducto, vendedorId: user.uid),
+                    );
                   },
-                  child: const Text('Sí, confirmar', style: TextStyle(color: Colors.white)),
+                  child: const Text('Ver solicitud', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );

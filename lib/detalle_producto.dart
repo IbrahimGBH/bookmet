@@ -1,4 +1,6 @@
+import 'package:bookmet/auth.dart';
 import 'package:bookmet/dialogo_transaccion.dart';
+import 'package:bookmet/dialogo_vendedor.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -124,12 +126,54 @@ class DetalleProducto extends StatelessWidget {
                       ),
               ),
               const SizedBox(height: 16),
-              Text(
-                titulo,
-                style: const TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  Text(
+                    titulo,
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  FutureBuilder<List<String>>(
+                    future: Future.wait([
+                      Auth.instance.getNombre(vendedorId),
+                      Auth.instance.getApellido(vendedorId)
+                    ]),
+                    builder: (context, asyncSnapshot) {
+                      return TextButton(onPressed: (){
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            Size? screenSize = MediaQuery.of(context).size;
+                            final double dialogWidth = screenSize.width * 0.9;
+                            final double dialogHeight = screenSize.height * 0.85;
+                            return VendedorDialog(
+                              vendedorId: vendedorId,
+                              dialogWidth: dialogWidth,
+                              dialogHeight: dialogHeight,
+                            );
+                          },
+                        );}, child: Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 12,
+                            backgroundColor: Colors.blueGrey,
+                            child: Icon(Icons.person, size: 14, color: Colors.white),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            (asyncSnapshot.hasData && asyncSnapshot.data!.length == 2)
+                              ? 'Vendedor: ${asyncSnapshot.data![0]} ${asyncSnapshot.data![1]}'
+                              : 'Cargando vendedor...',
+                            style: TextStyle(fontSize: 12, color: Colors.blue[700]),
+                          ),
+                        ],
+                      ));
+                    }
+                  )
+                ],
               ),
               const SizedBox(height: 4),
               Text(
@@ -179,7 +223,6 @@ class DetalleProducto extends StatelessWidget {
                             .collection('transacciones')
                             .where('id_producto', isEqualTo: idProducto)
                             .where('estado', isEqualTo: 'pendiente')
-                            .limit(1)
                             .get(),
                         builder: (context, txSnapshot) {
                           if (!txSnapshot.hasData) {
