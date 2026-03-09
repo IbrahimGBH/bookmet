@@ -66,6 +66,7 @@ class DetalleProducto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    DocumentReference fbase = FirebaseFirestore.instance.collection('productos').doc(idProducto);
     String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
     bool esMiPublicacion = (currentUserId != null && currentUserId == vendedorId);
 
@@ -193,6 +194,15 @@ class DetalleProducto extends StatelessWidget {
                 descripcion,
                 style: TextStyle(fontSize: 12.0, color: Colors.grey[800]),
               ),
+              FutureBuilder(
+                future: fbase.get(),
+                builder: (context, asyncSnapshot) {
+                  return Text(
+                    asyncSnapshot.hasData ? 'Estado de conservación: ${asyncSnapshot.data!.get('estado')}' : 'Estado de conservación: Cargando...',
+                    style: TextStyle(fontSize: 12.0, color: Colors.grey[600]),
+                  );
+                }
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Tipo de transacción:',
@@ -202,15 +212,31 @@ class DetalleProducto extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                precio == '0' ? 'Gratis' : 'Venta: $precio',
-                style: TextStyle(fontSize: 12.0, color: Colors.grey[800]),
+              FutureBuilder<DocumentSnapshot>(
+                future: fbase.get(),
+                builder: (context, snapshot) {
+                  String displayText = 'Cargando...';
+                  if (snapshot.hasData && snapshot.data!.exists) {
+                    final data = snapshot.data!.data() as Map<String, dynamic>?;
+                    if (data != null) {
+                      final tipo = data['tipo_transaccion'] as String? ?? '';
+                      final valor = data['valor'] as String? ?? '';
+                      if (tipo == 'Venta') {
+                        displayText = 'Venta: $valor\$';
+                      } else {
+                        displayText = tipo; // Handles 'Gratis' and 'Intercambio'
+                      }
+                    }
+                  }
+                  return Text(displayText,
+                      style: TextStyle(fontSize: 12.0, color: Colors.grey[800]));
+                },
               ),
               const SizedBox(height: 24),
 
               if (esMiPublicacion)
                 FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance.collection('productos').doc(idProducto).get(),
+                  future: fbase.get(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
@@ -353,11 +379,16 @@ class DetalleProducto extends StatelessWidget {
 
 
               const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  'Estado: Disponible',
-                  style: TextStyle(fontSize: 10.0, color: Colors.grey[500]),
-                ),
+              FutureBuilder(
+                future: fbase.get(),
+                builder: (context, asyncSnapshot) {
+                  return Center(
+                    child: Text(
+                      asyncSnapshot.hasData ? '${asyncSnapshot.data!.get('disponibilidad')}' : 'Cargando...',
+                      style: TextStyle(fontSize: 10.0, color: Colors.grey[500]),
+                    ),
+                  );
+                }
               ),
             ],
           ),
