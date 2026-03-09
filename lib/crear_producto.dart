@@ -2,13 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart'; 
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
-/* import 'package:flutter_image_compress/flutter_image_compress.dart'; 
-esto lo quite porque segun es lo que trae problemas y hace que sea mas lento pero creo que lo vamos a tener que 
-volver a poner para que la imagen se comprima y pueda guardarse mas rapido 
-*/
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 
 class CrearProducto extends StatefulWidget {
@@ -47,26 +44,26 @@ class _CrearProductoState extends State<CrearProducto> {
   }
 
 
-Future<String?> _uploadImage() async {
+  Future<String?> _uploadImage() async {
     if (_webImageBytes == null) return null;
-    
+
     try {
-      String fileName = 'productos/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
+      final supabase = Supabase.instance.client;
+      final String fileName = 'productos/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      UploadTask uploadTask = storageRef.putData(
-        _webImageBytes!, 
-        SettableMetadata(contentType: 'image/jpeg')
-      );
+      await supabase.storage.from('imagen_producto').uploadBinary(
+            fileName,
+            _webImageBytes!,
+            fileOptions: const FileOptions(
+                cacheControl: '3600', upsert: false, contentType: 'image/jpeg'),
+          );
 
-      // Límite de 15 segundos para evitar giro infinito (por ahora)
-      TaskSnapshot snapshot = await uploadTask.timeout(const Duration(seconds: 15));
-     
-      String downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
+      final String publicUrl =
+          supabase.storage.from('imagen_producto').getPublicUrl(fileName);
 
+      return publicUrl;
     } catch (e) {
-      print("Error al subir a Storage: $e");
+      //vacío;
       return null;
     }
   }
@@ -300,15 +297,7 @@ Future<String?> _uploadImage() async {
         );
         return;
       }
-      //validacion de la imagen mientras tanto asi para que se cree la publicacion sin imagen
-      //if (_webImageBytes == null) { 
-        //ScaffoldMessenger.of(context).showSnackBar(
-          //const SnackBar(content: Text("Por favor selecciona una imagen"), backgroundColor: Colors.red),
-        //);
-        //return;
-      
 
-      
      // 1. Inicia la ruedita
       setState(() {
         _isUploading = true;
@@ -317,26 +306,19 @@ Future<String?> _uploadImage() async {
       try {
         
         // 2. Manejo de la imagen opcional
-        String imageUrl = ""; 
+        String? imageUrl;
         
         if (_webImageBytes != null) {
-          String? uploadedUrl = await _uploadImage();
-          if (uploadedUrl != null) {
-            imageUrl = uploadedUrl;
+          imageUrl = await _uploadImage();
+          if (imageUrl == null) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Error al subir la imagen."), backgroundColor: Colors.red),
+              );
+            }
+            return; 
           }
         }
-        
-        // 2. Intentamos subir la imagen
-        //String? imageUrl = await _uploadImage();
-        
-        //if (imageUrl == null) {
-          //if (mounted) {
-            //ScaffoldMessenger.of(context).showSnackBar(
-              //const SnackBar(content: Text("Error al subir la imagen. Revisa tu conexión o reglas de Storage."), backgroundColor: Colors.red),
-            //);
-          //}
-          //return;
-        //}
        
         // 3. Guardamos en Firestore
         await FirebaseFirestore.instance.collection('productos').add({
@@ -348,8 +330,8 @@ Future<String?> _uploadImage() async {
           'valor': tipoTransaccionSeleccionado == 'Gratis' ? '0' : valorController.text,
           'descripcion': descripcionController.text,
           'vendedor_id': FirebaseAuth.instance.currentUser?.uid,
-          'fecha': Timestamp.now(),
-          'image_url': imageUrl, 
+          'fecha': Timestamp.now(), 
+          'image_url': imageUrl ?? "",
           'disponibilidad': 'disponible',
         });
         

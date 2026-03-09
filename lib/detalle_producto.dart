@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pantalla_editar_producto.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class DetalleProducto extends StatelessWidget {
@@ -43,17 +44,31 @@ class DetalleProducto extends StatelessWidget {
             TextButton(
               onPressed: () async {
                 try {
-                  // Borramos de Firebase usando el ID
+                  if (imageUrl != null && imageUrl!.isNotEmpty) {
+                    final supabase = Supabase.instance.client;
+                    final uri = Uri.parse(imageUrl!);
+                    final pathSegments = uri.pathSegments;
+                    final bucketIndex = pathSegments.indexOf('imagen_producto');
+
+                    if (bucketIndex != -1 && bucketIndex + 1 < pathSegments.length) {
+                      final imagePath = pathSegments.sublist(bucketIndex + 1).join('/');
+                      await supabase.storage.from('imagen_producto').remove([imagePath]);
+                    }
+                  }
+
                   await FirebaseFirestore.instance.collection('productos').doc(idProducto).delete();
                   
-                  Navigator.of(ctx).pop(); // Cierra la alerta
-                  Navigator.of(context).pop(); // Cierra la ventana de detalles
+                  if (!ctx.mounted) return;
+                  Navigator.of(ctx).pop(); 
+                  Navigator.of(context).pop(); 
                   
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Publicación eliminada'), backgroundColor: Colors.red),
                   );
                 } catch (e) {
-                  print("Error al eliminar: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al eliminar el producto o su imagen: $e'), backgroundColor: Colors.red),
+                  );
                 }
               },
               child: const Text('Eliminar', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
