@@ -52,7 +52,7 @@ class TDialog extends StatelessWidget {
         if (isSeller && !isAccepted) {
           // Seller must accept or reject
           return AlertDialog(
-            title: Text("Solicitud de $tipoTransaccion"),
+            title: tipoTransaccion == 'Gratis' ? Text('Solicitud de transaccion') : Text("Solicitud de $tipoTransaccion"),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,7 +147,7 @@ class TDialog extends StatelessWidget {
         final String tipo = data['tipo_transaccion'];
 
         return AlertDialog(
-          title: Text("Confirmar $tipo"),
+          title: Text("Confirmar Solicitud"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
