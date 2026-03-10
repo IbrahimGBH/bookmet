@@ -98,6 +98,7 @@ class Transaccion {
         final String compradorId = data['comprador_id'];
         final String vendedorId = data['vendedor_id'];
         final String idProducto = data['id_producto'];
+        
         await ffStore
             .collection('usuarios')
             .doc(compradorId)
@@ -112,18 +113,16 @@ class Transaccion {
             .doc(idTransaccion)
             .delete();
 
-        await ffStore.collection('productos').doc(idProducto).update({
-          'disponibilidad': 'no disponible',
-        });
+        // CAMBIO, Eliminamos el producto de Firestore por completo
+        await ffStore.collection('productos').doc(idProducto).delete();
 
         await ffStore.collection('transacciones').doc(idTransaccion).update({
           'estado': 'finalizada',
           'fecha_confirmacion': Timestamp.now(),
         });
       }
-      //Aquí se debería añadir lógica para notificar tanto al comprador y el vendedor sobre la finalización de la transacción
     } catch (e) {
-      //  manejar error
+      // manejar error
     }
   }
 
@@ -133,21 +132,32 @@ class Transaccion {
           .collection('transacciones')
           .doc(idTransaccion)
           .get();
-      if (Auth.instance.getUid() == transaccionDoc['comprador_id']) {
+      
+      if (!transaccionDoc.exists) return;
+
+      final data = transaccionDoc.data()!;
+      bool compradorConfirmo = data['confirmacion_comprador'] ?? false;
+      bool vendedorConfirmo = data['confirmacion_vendedor'] ?? false;
+
+      // Actualizamos quién hizo clic y cambiamos la variable local a true
+      if (Auth.instance.getUid() == data['comprador_id']) {
         await ffStore.collection('transacciones').doc(idTransaccion).update({
           'confirmacion_comprador': true,
         });
-      } else if (Auth.instance.getUid() == transaccionDoc['vendedor_id']) {
+        compradorConfirmo = true; 
+      } else if (Auth.instance.getUid() == data['vendedor_id']) {
         await ffStore.collection('transacciones').doc(idTransaccion).update({
           'confirmacion_vendedor': true,
         });
+        vendedorConfirmo = true; 
       }
-      if (transaccionDoc['confirmacion_comprador'] == true &&
-          transaccionDoc['confirmacion_vendedor'] == true) {
-        finalizarTransaccion(idTransaccion);
+      
+      // Si ambos son true, se ejecuta la finalización que borra el producto
+      if (compradorConfirmo && vendedorConfirmo) {
+        await finalizarTransaccion(idTransaccion);
       }
     } catch (e) {
-      //manejar error
+      // manejar error
     }
   }
 

@@ -27,13 +27,23 @@ class _PagRegistroState extends State<PagRegistro> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent, 
+        elevation: 0, 
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context); 
+          },
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(30),
+        padding: const EdgeInsets.only(left: 30, right: 30, bottom: 30),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text('Registrarse', style: TextStyle(fontSize: 20)),
               const SizedBox(height: 5),
               const Text('* campos obligatorios', style: TextStyle(fontSize:10, color: Colors.red)),

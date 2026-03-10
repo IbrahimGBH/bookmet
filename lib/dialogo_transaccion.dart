@@ -183,7 +183,24 @@ class TDialog extends StatelessWidget {
                   else if (waitingForUserVerification)
                     const Text("Se ha abierto una pestaña de PayPal.\n\nCompleta tu pago. Cuando veas la pantalla final, cierra esa pestaña y presiona 'Ya pagué' para validar tu compra.")
                   else ...[
-                    Text(tipo == 'Venta' ? "¿Deseas proceder al pago de \$$precioString por este artículo?" : "¿Estás seguro de que deseas solicitar este artículo?"),
+                    Text(tipo == 'Venta' 
+                      ? "¿Deseas proceder al pago de \$$precioString por este artículo?" 
+                      : "¿Estás seguro de que deseas solicitar este artículo?"),
+                    
+                    // --- CAMPO DE TEXTO RESTAURADO ---
+                    if (tipo == 'Intercambio') ...[
+                      const SizedBox(height: 20),
+                      const Text("Tu oferta:", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: propuestaController,
+                        decoration: const InputDecoration(
+                          hintText: "Ej: Te cambio mi libro de Física I...",
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -194,13 +211,23 @@ class TDialog extends StatelessWidget {
                     child: const Text("Cancelar"),
                   ),
                 
-                // --- BOTÓN 1: CREAR ORDEN Y ABRIR PAYPAL ---
+                // --- BOTÓN 1: CREAR ORDEN Y ABRIR PAYPAL (O CONFIRMAR INTERCAMBIO) ---
                 if (!isProcessingPayment && !waitingForUserVerification)
                   ElevatedButton(
                     onPressed: () async {
                       if (tipo != 'Venta') {
-                        Transaccion.instance.solicitarTransaccion(idProducto, vendedorId);
+                        // AQUÍ ENVIAMOS LA PROPUESTA SI ES UN INTERCAMBIO
+                        Transaccion.instance.solicitarTransaccion(
+                          idProducto, 
+                          vendedorId,
+                          propuesta: tipo == 'Intercambio' ? propuestaController.text : null
+                        );
                         Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text("Solicitud enviada."),
+                              backgroundColor: Colors.green),
+                        );
                       } else {
                         setState(() { isProcessingPayment = true; });
                         try {
@@ -215,7 +242,7 @@ class TDialog extends StatelessWidget {
                                 "description": "Compra de $nombreProducto"
                               }],
                               "application_context": {
-                                "return_url": "https://example.com", // <-- Cambiado a una página en blanco para que no de error
+                                "return_url": "https://example.com", 
                                 "cancel_url": "https://example.com",
                                 "user_action": "PAY_NOW"
                               }
@@ -233,7 +260,9 @@ class TDialog extends StatelessWidget {
                           }
                         } catch (e) {
                           setState(() { isProcessingPayment = false; });
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error con PayPal")));
+                          if(context.mounted){
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error con PayPal")));
+                          }
                         }
                       }
                     },
@@ -263,7 +292,6 @@ class TDialog extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("¡Pago verificado y registrado con éxito!"), backgroundColor: Colors.green));
                           }
                         } else {
-                          // Validación para saber si el usuario mintió o cerró antes de tiempo
                           setState(() { isProcessingPayment = false; });
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Aún no has completado el pago en PayPal."), backgroundColor: Colors.red));
@@ -271,7 +299,9 @@ class TDialog extends StatelessWidget {
                         }
                       } catch (e) {
                         setState(() { isProcessingPayment = false; });
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error al verificar el pago.")));
+                        if(context.mounted){
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error al verificar el pago.")));
+                        }
                       }
                     },
                     child: const Text("Ya pagué"),
@@ -311,34 +341,56 @@ class TDialog extends StatelessWidget {
         ],
       ),
       actions: [
+        // --- AQUÍ ESTÁ EL BOTÓN DE CONTACTO CORREGIDO ---
         TextButton(
           onPressed: () async {
-            try{
-              if (!context.mounted) return; // Por si el usuario cierra la app rápido
-              DocumentSnapshot vendedorDoc = await FirebaseFirestore.instance
+            try {
+              if (!context.mounted) return; 
+              
+              // Aquí definimos a quién buscar: si soy el vendedor, busco al comprador y viceversa.
+              final String idAContactar = isSeller ? compradorId : vendedorIdTx;
+
+              DocumentSnapshot usuarioDoc = await FirebaseFirestore.instance
                   .collection('usuarios')
-                  .doc(vendedorIdTx) 
+                  .doc(idAContactar) 
                   .get();
-              if (vendedorDoc.exists && vendedorDoc.data() != null) {
-                Map<String, dynamic> vendedorData = vendedorDoc.data() as Map<String, dynamic>;
-                String linkWhatsapp = vendedorData['link_whatsapp'] ?? '';
+
+              if (usuarioDoc.exists && usuarioDoc.data() != null) {
+                Map<String, dynamic> usuarioData = usuarioDoc.data() as Map<String, dynamic>;
+                String linkWhatsapp = usuarioData['link_whatsapp'] ?? '';
 
                 if (linkWhatsapp.isNotEmpty) {
                   final Uri url = Uri.parse(linkWhatsapp);
-                  // Esta es la orden que saca a la persona a WhatsApp
                   if (await canLaunchUrl(url)) {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("No se pudo abrir la aplicación de WhatsApp."), backgroundColor: Colors.orange),
+                      );
                     }
+                  }
+                } else {
+                  // Mensaje si el usuario no guardó su WhatsApp
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Este usuario no tiene un enlace de WhatsApp registrado."), backgroundColor: Colors.orange),
+                    );
+                  }
                 }
               }
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("No se pudo abrir WhatsApp."), backgroundColor: Colors.red),
-              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Error de conexión al buscar el perfil."), backgroundColor: Colors.red),
+                );
+              }
             }
           },
           child: Text(isSeller ? "Contactar Comprador" : "Contactar Vendedor"),
         ),
+        // --- FIN DEL BOTÓN DE CONTACTO CORREGIDO ---
+        
         ElevatedButton(
           onPressed: (isSeller ? vendedorConfirmo : compradorConfirmo)
               ? null 
