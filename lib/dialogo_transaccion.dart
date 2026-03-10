@@ -4,6 +4,8 @@ import 'package:bookmet/transaccion.dart';
 import 'package:bookmet/dialogo_calificacion.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class TDialog extends StatelessWidget {
   final String idProducto;
@@ -137,6 +139,25 @@ class TDialog extends StatelessWidget {
 
   Widget _buildConfirmationDialog(BuildContext context) {
     final TextEditingController propuestaController = TextEditingController();
+    
+    bool isProcessingPayment = false;
+    bool waitingForUserVerification = false;
+    String? currentOrderId; // Para guardar el ID 
+
+    // Credenciales para el paypal
+    String clientId = "AU4-2lWmQ4qSXz3al1DnHovsN3BRFW5ssjGfLTOdzcAaxDr7-LIc-okOjsBlC5b1f4Cd3-HD1zG3GQ8r"; 
+    String secret = "EIxXdS8pe0lFCCUd_U0GnPPJRvVqiSR99QIS_6m-x0ZZIgDcGEUJ9JZ1Wfs5OtKNb7wT2HGXKzU28DhT"; 
+
+    // Función auxiliar para obtener el token de PayPal
+    Future<String> getPayPalToken() async {
+      String basicAuth = 'Basic ${base64Encode(utf8.encode('$clientId:$secret'))}';
+      var response = await http.post(
+        Uri.parse('https://api-m.sandbox.paypal.com/v1/oauth2/token'),
+        headers: {'Authorization': basicAuth, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'grant_type=client_credentials'
+      );
+      return jsonDecode(response.body)['access_token'];
+    }
 
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance.collection('productos').doc(idProducto).get(),
@@ -145,51 +166,119 @@ class TDialog extends StatelessWidget {
         
         final data = snapshot.data!.data() as Map<String, dynamic>;
         final String tipo = data['tipo_transaccion'];
+        // Usamos 'valor' 
+        final String precioString = data['valor']?.toString() ?? '0.00'; 
+        final String nombreProducto = data['nombre'] ?? 'Producto';
 
-        return AlertDialog(
-          title: Text("Confirmar Solicitud"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("¿Estás seguro de que deseas solicitar este artículo?"),
-              if (tipo == 'Intercambio') ...[
-                const SizedBox(height: 20),
-                const Text("Tu oferta:", style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: propuestaController,
-                  decoration: const InputDecoration(
-                    hintText: "Ej: Te cambio mi libro de Física I...",
-                    border: OutlineInputBorder(),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(tipo == 'Venta' ? "Confirmar Compra" : "Confirmar $tipo"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isProcessingPayment)
+                    const Center(child: CircularProgressIndicator())
+                  else if (waitingForUserVerification)
+                    const Text("Se ha abierto una pestaña de PayPal.\n\nCompleta tu pago. Cuando veas la pantalla final, cierra esa pestaña y presiona 'Ya pagué' para validar tu compra.")
+                  else ...[
+                    Text(tipo == 'Venta' ? "¿Deseas proceder al pago de \$$precioString por este artículo?" : "¿Estás seguro de que deseas solicitar este artículo?"),
+                  ],
+                ],
+              ),
+              actions: [
+                if (!isProcessingPayment)
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text("Cancelar"),
                   ),
-                  maxLines: 3,
-                ),
+                
+                // --- BOTÓN 1: CREAR ORDEN Y ABRIR PAYPAL ---
+                if (!isProcessingPayment && !waitingForUserVerification)
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (tipo != 'Venta') {
+                        Transaccion.instance.solicitarTransaccion(idProducto, vendedorId);
+                        Navigator.of(context).pop();
+                      } else {
+                        setState(() { isProcessingPayment = true; });
+                        try {
+                          String token = await getPayPalToken();
+                          var orderResponse = await http.post(
+                            Uri.parse('https://api-m.sandbox.paypal.com/v2/checkout/orders'),
+                            headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+                            body: jsonEncode({
+                              "intent": "CAPTURE",
+                              "purchase_units": [{
+                                "amount": {"currency_code": "USD", "value": precioString},
+                                "description": "Compra de $nombreProducto"
+                              }],
+                              "application_context": {
+                                "return_url": "https://example.com", // <-- Cambiado a una página en blanco para que no de error
+                                "cancel_url": "https://example.com",
+                                "user_action": "PAY_NOW"
+                              }
+                            })
+                          );
+                          
+                          var orderData = jsonDecode(orderResponse.body);
+                          currentOrderId = orderData['id']; //Guardamos el id
+                          String approveUrl = orderData['links'].firstWhere((link) => link['rel'] == 'approve')['href'];
+
+                          final Uri url = Uri.parse(approveUrl);
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                            setState(() { isProcessingPayment = false; waitingForUserVerification = true; });
+                          }
+                        } catch (e) {
+                          setState(() { isProcessingPayment = false; });
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error con PayPal")));
+                        }
+                      }
+                    },
+                    child: Text(tipo == 'Venta' ? "Pagar con PayPal" : "Confirmar"),
+                  ),
+                
+                // --- BOTÓN 2: VALIDAR EL PAGO ---
+                if (waitingForUserVerification && !isProcessingPayment)
+                  ElevatedButton(
+                    onPressed: () async {
+                      setState(() { isProcessingPayment = true; });
+                      try {
+                        String token = await getPayPalToken();
+                        
+                        var captureResponse = await http.post(
+                          Uri.parse('https://api-m.sandbox.paypal.com/v2/checkout/orders/$currentOrderId/capture'),
+                          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+                        );
+                        
+                        var captureData = jsonDecode(captureResponse.body);
+                        
+                        // Validamos si PayPal nos dice que se completó
+                        if (captureData['status'] == 'COMPLETED') {
+                          await Transaccion.instance.solicitarTransaccion(idProducto, vendedorId);
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("¡Pago verificado y registrado con éxito!"), backgroundColor: Colors.green));
+                          }
+                        } else {
+                          // Validación para saber si el usuario mintió o cerró antes de tiempo
+                          setState(() { isProcessingPayment = false; });
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Aún no has completado el pago en PayPal."), backgroundColor: Colors.red));
+                          }
+                        }
+                      } catch (e) {
+                        setState(() { isProcessingPayment = false; });
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error al verificar el pago.")));
+                      }
+                    },
+                    child: const Text("Ya pagué"),
+                  )
               ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Cancelar"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Transaccion.instance.solicitarTransaccion(
-                  idProducto, 
-                  vendedorId,
-                  propuesta: tipo == 'Intercambio' ? propuestaController.text : null
-                );
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("Solicitud enviada."),
-                      backgroundColor: Colors.green),
-                );
-              },
-              child: const Text("Confirmar"),
-            ),
-          ],
+            );
+          }
         );
       }
     );
@@ -200,6 +289,9 @@ class TDialog extends StatelessWidget {
     final data = transaction.data() as Map<String, dynamic>;
     final bool compradorConfirmo = data['confirmacion_comprador'] ?? false;
     final bool vendedorConfirmo = data['confirmacion_vendedor'] ?? false;
+    
+    // Para saber si es Venta, Intercambio o Gratis
+    final String tipoTransaccion = data['tipo'] ?? 'Desconocido'; 
 
     final String currentUserId = Auth.instance.getUid();
     final String compradorId = data['comprador_id'];
@@ -254,7 +346,6 @@ class TDialog extends StatelessWidget {
                   // Confirmar la entrega en Firestore
                   await Transaccion.instance.confirmarEntrega(transaction.id);
 
-                  
                   if (!isSeller) {
                     if (context.mounted) {
                       Navigator.of(context).pop(); 
@@ -266,7 +357,6 @@ class TDialog extends StatelessWidget {
                       );
                     }
                   } else {
-                    
                     if (context.mounted) Navigator.of(context).pop();
                   }
 
@@ -278,9 +368,10 @@ class TDialog extends StatelessWidget {
                     );
                   }
                 },
-          child: const Text("Confirmar Entrega"),
+          child: Text(isSeller ? "Confirmar Entrega" : "Compra Recibida"),
         ),
-        if (!(isSeller ? vendedorConfirmo : compradorConfirmo))
+        
+        if (tipoTransaccion != 'Venta' && !(isSeller ? vendedorConfirmo : compradorConfirmo))
           TextButton(
             onPressed: () {
               _showCancelConfirmationDialog(context, transaction.id);

@@ -41,8 +41,10 @@ class Transaccion {
         }
         break;
       case 'Venta':
-      // Lógica para solicitar compra (por implementar)
-        return;
+        // La transacción ya fue cobrada vía PayPal en la UI.
+        // Ahora sí la marcamos como "aceptada" automáticamente porque el dinero ya entró.
+        datosTransaccion['aceptada'] = true;
+        break;
       case 'Gratis':
         //No se requiere más info
         break;
