@@ -19,13 +19,13 @@ class TDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<QuerySnapshot>(
-      future: FirebaseFirestore.instance
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
           .collection('transacciones')
           .where('id_producto', isEqualTo: idProducto)
           .where('estado', isEqualTo: 'pendiente')
           .limit(1)
-          .get(),
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -409,6 +409,7 @@ class TDialog extends StatelessWidget {
                       );
                     }
                   } else {
+                    if (context.mounted) Navigator.of(context).pop();
                     if (context.mounted) Navigator.of(context).pop();
                   }
 

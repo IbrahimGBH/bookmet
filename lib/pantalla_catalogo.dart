@@ -1,4 +1,5 @@
 import 'package:bookmet/home_screen.dart';
+import 'dart:async';
 import 'package:bookmet/tarjeta_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/crear_producto.dart';
@@ -35,67 +36,81 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
     // Esto hace que la revisión se ejecute justo cuando la pantalla termina de cargar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _verificarWhatsApp(); 
-      Future<void> _verificarSolicitudes() async {
+      _escucharNuevasSolicitudes();
+  }); 
+} 
+  static StreamSubscription? _solicitudesSubscription;
+  static final Set<String> _notificacionesMostradas = {};
+
+  void _escucharNuevasSolicitudes() {
+    _solicitudesSubscription?.cancel();
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // 1. Buscamos en 'transacciones' solicitudes pendientes para este vendedor
-    final query = await FirebaseFirestore.instance
+    final query = FirebaseFirestore.instance
         .collection('transacciones')
         .where('vendedor_id', isEqualTo: user.uid)
         .where('estado', isEqualTo: 'pendiente')
-        .where('aceptada', isEqualTo: false)
-        .get();
+        .where('aceptada', isEqualTo: false);
 
-    // 2. Si encontramos alguno, lanzamos la alerta
-    if (query.docs.isNotEmpty) {
-      for (var txDoc in query.docs) {
-        if (!mounted) return;
-        
-        final datosTx = txDoc.data();
-        final String idProducto = datosTx['id_producto'];
-        
-        // Obtenemos datos del producto para el mensaje
-        final prodDoc = await FirebaseFirestore.instance.collection('productos').doc(idProducto).get();
-        final String nombreProducto = prodDoc.exists ? (prodDoc.data()?['nombre'] ?? 'un artículo') : 'un artículo';
-
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('¡Nueva Solicitud! 🎉'),
-              content: Text('Alguien ha solicitado tu producto "$nombreProducto".\n\n¿Deseas ver la solicitud?'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Luego', style: TextStyle(color: Colors.grey)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // Abrimos el diálogo existente que gestiona la transacción
-                    showDialog(
-                      context: context,
-                      builder: (context) => TDialog(idProducto: idProducto, vendedorId: user.uid),
-                    );
-                  },
-                  child: const Text('Ver solicitud', style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            );
-          },
-        );
+    _solicitudesSubscription = query.snapshots().listen((snapshot) {
+      for (var change in snapshot.docChanges) {
+        final docId = change.doc.id;
+        if (change.type == DocumentChangeType.added) {
+          if (!_notificacionesMostradas.contains(docId)) {
+            _mostrarDialogoSolicitud(change.doc);
+            _notificacionesMostradas.add(docId);
+          }
+        } else if (change.type == DocumentChangeType.removed) {
+          // Limpiamos el ID del registro si la transacción se elimina (cancela/rechaza)
+          _notificacionesMostradas.remove(docId);
+        }
       }
-    }
-   }
-    
-   _verificarSolicitudes(); 
-  }); 
-} 
+    });
+  }
+
+  Future<void> _mostrarDialogoSolicitud(DocumentSnapshot txDoc) async {
+    if (!mounted) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final datosTx = txDoc.data() as Map<String, dynamic>;
+    final String idProducto = datosTx['id_producto'];
+
+    final prodDoc = await FirebaseFirestore.instance.collection('productos').doc(idProducto).get();
+    final String nombreProducto = prodDoc.exists ? (prodDoc.data()?['nombre'] ?? 'un artículo') : 'un artículo';
+    final String compradorId = datosTx['comprador_id'];
+
+    final nombreComprador = await Auth.instance.getNombre(compradorId);
+    final apellidoComprador = await Auth.instance.getApellido(compradorId);
+    final String nombreCompleto = '$nombreComprador $apellidoComprador'.trim();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('¡Nueva Solicitud! 🎉'),
+          content: Text('${nombreCompleto.isNotEmpty ? nombreCompleto : 'Un usuario'} ha solicitado tu producto "$nombreProducto".\n\n¿Deseas ver la solicitud?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Luego', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              onPressed: () {
+                Navigator.pop(context);
+                showDialog(context: context, builder: (context) => TDialog(idProducto: idProducto, vendedorId: user.uid));
+              },
+              child: const Text('Ver solicitud', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Future<void> _verificarWhatsApp() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -152,6 +167,12 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
         .replaceAll('ó', 'o')
         .replaceAll('ú', 'u')
         .replaceAll('ü', 'u');
+  }
+
+  @override
+  void dispose() {
+    _controladorBusqueda.dispose();
+    super.dispose();
   }
 
 void _mostrarDialogoFiltros() {

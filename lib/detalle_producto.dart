@@ -250,8 +250,8 @@ class DetalleProducto extends StatelessWidget {
               const SizedBox(height: 24),
 
               if (esMiPublicacion)
-                FutureBuilder<DocumentSnapshot>(
-                  future: fbase.get(),
+                StreamBuilder<DocumentSnapshot>(
+                  stream: fbase.snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
@@ -259,12 +259,12 @@ class DetalleProducto extends StatelessWidget {
                     var data = snapshot.data!.data() as Map<String, dynamic>?;
                     String disponibilidad = data != null && data.containsKey('disponibilidad') ? (data['disponibilidad'] ?? '') : '';
                     if (disponibilidad == 'en transaccion') {
-                      return FutureBuilder<QuerySnapshot>(
-                        future: FirebaseFirestore.instance
+                      return StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
                             .collection('transacciones')
                             .where('id_producto', isEqualTo: idProducto)
                             .where('estado', isEqualTo: 'pendiente')
-                            .get(),
+                            .snapshots(),
                         builder: (context, txSnapshot) {
                           if (!txSnapshot.hasData) {
                             return const Center(child: CircularProgressIndicator());
@@ -351,14 +351,14 @@ class DetalleProducto extends StatelessWidget {
                 )
 
               else
-                FutureBuilder<QuerySnapshot>(
-                  future: FirebaseFirestore.instance
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
                       .collection('transacciones')
                       .where('id_producto', isEqualTo: idProducto)
                       .where('comprador_id', isEqualTo: currentUserId)
                       .where('estado', isEqualTo: 'pendiente')
                       .limit(1)
-                      .get(),
+                      .snapshots(),
                   builder: (context, snapshot) {
                     bool alreadyRequested = false;
                     if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
