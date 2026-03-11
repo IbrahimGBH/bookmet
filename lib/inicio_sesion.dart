@@ -4,11 +4,20 @@ import 'package:bookmet/auth.dart';
 import 'package:bookmet/home_screen.dart';
 import 'package:bookmet/pantalla_catalogo.dart';
 
+// lo cambiamos a StatefulWidget para poder usar setState
+class InicioSesion extends StatefulWidget {
+  const InicioSesion({super.key});
 
-class InicioSesion extends StatelessWidget {
-  InicioSesion({super.key});
+  @override
+  State<InicioSesion> createState() => _InicioSesionState();
+}
+
+class _InicioSesionState extends State<InicioSesion> {
   final controllerUser = TextEditingController();
   final controllerPassword = TextEditingController();
+
+  // la variable para controlar si la contraseña está oculta o no
+  bool _passwordOculta = true;
 
   @override
   Widget build(BuildContext context) {
@@ -59,10 +68,17 @@ class InicioSesion extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
+              // pasamos la variable y el callback para el ojito
               _buildInputField(
                 label: 'Contraseña',
-                isObscure: true,
+                isObscure: _passwordOculta,
                 controller: controllerPassword,
+                esContrasena: true,
+                alPresionarOjito: () {
+                  setState(() {
+                    _passwordOculta = !_passwordOculta;
+                  });
+                },
               ),
               const SizedBox(height: 40),
 
@@ -83,7 +99,7 @@ class InicioSesion extends StatelessWidget {
                       return;
                     }
 
-/*                    // ADMIN CABLEADO 
+/* // ADMIN CABLEADO 
                     if (email == 'admin@unimet.edu.ve' && password == 'Admin123') {
                       messenger.showSnackBar(
                         const SnackBar(
@@ -183,7 +199,7 @@ class InicioSesion extends StatelessWidget {
                     '¿No tienes una cuenta de BookMet?',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(width: 5),
+                  const SizedBox(width: 5),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
@@ -218,10 +234,13 @@ class InicioSesion extends StatelessWidget {
     );
   }
 
+  // modificamos la función para que soporte el ojito
   Widget _buildInputField({
     required String label,
     bool isObscure = false,
     TextEditingController? controller,
+    bool esContrasena = false, // Nuevo parámetro
+    VoidCallback? alPresionarOjito, // Nuevo parámetro
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,11 +256,21 @@ class InicioSesion extends StatelessWidget {
           child: TextField(
             controller: controller,
             obscureText: isObscure,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
+            decoration: InputDecoration(
+              // agregamos el icono solo si es campo de contraseña
+              suffixIcon: esContrasena 
+                ? IconButton(
+                    icon: Icon(
+                      isObscure ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    onPressed: alPresionarOjito,
+                  ) 
+                : null,
+              border: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.black),
               ),
-              enabledBorder: OutlineInputBorder(
+              enabledBorder: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.black),
               ),
               fillColor: Colors.white,
