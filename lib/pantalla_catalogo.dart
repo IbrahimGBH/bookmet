@@ -272,11 +272,9 @@ void _mostrarDialogoFiltros() {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // Color melocotón clarito del diseño
         backgroundColor: const Color(0xFFFFEAC5), 
         elevation: 0,
         toolbarHeight: 80,
-        // LOGO ARRIBA A LA IZQUIERDA
         leadingWidth: 150, 
         leading: Padding(
           padding: const EdgeInsets.only(left: 20.0),
@@ -287,10 +285,10 @@ void _mostrarDialogoFiltros() {
         ),
 
         actions: [
-          // BARRA DE BÚSQUEDA CONDICIONAL
+
           if (_estaBuscando)
             Container(
-              width: 300, // Ancho de la barra de búsqueda
+              width: 300,
               margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -298,7 +296,7 @@ void _mostrarDialogoFiltros() {
               ),
               child: TextField(
                 controller: _controladorBusqueda,
-                autofocus: true, // Para que el teclado se abra de una vez
+                autofocus: true,
                 decoration: InputDecoration(
                   hintText: 'Buscar por nombre o autor...',
                   hintStyle: const TextStyle(fontSize: 14),
@@ -323,7 +321,6 @@ void _mostrarDialogoFiltros() {
               ),
             )
           else ...[
-            // LUPITA Y FAVORITOS (SOLO SE MUESTRAN SI NO SE ESTÁ BUSCANDO)
             IconButton(
               icon: const Icon(Icons.search, color: Colors.black, size: 28),
               onPressed: () {
@@ -343,12 +340,18 @@ void _mostrarDialogoFiltros() {
               },
               child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             ),
-          ], // FIN BARRA DE BÚSQUEDA CONDICIONAL
+          ],
 
           const SizedBox(width: 15),
+
           TextButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                barrierColor: Colors.black54,
+                builder: (context) => const CrearProducto(),
+              );
             }, 
             child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))
           ),            
@@ -360,7 +363,6 @@ void _mostrarDialogoFiltros() {
           ),
           const SizedBox(width: 15),
           
-          // BOTÓN DE LA PERSONITA 
           PopupMenuButton<String>(
 
             icon: const CircleAvatar(
@@ -425,9 +427,6 @@ void _mostrarDialogoFiltros() {
           children: [
             const SizedBox(height: 20),
 
-
-
-// IMAGEN DEL CATÁLOGO
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: ClipRRect(
@@ -450,9 +449,8 @@ void _mostrarDialogoFiltros() {
               ),
             ),
             
-
-            
             const SizedBox(height: 40),
+
           Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
               child: Column(
@@ -483,7 +481,6 @@ void _mostrarDialogoFiltros() {
 
             const SizedBox(height: 40),
 
-          
            Padding(
   padding: const EdgeInsets.symmetric(horizontal: 40.0),
 
@@ -493,29 +490,25 @@ void _mostrarDialogoFiltros() {
     builder: (context, snapshot) {
       
       if (!snapshot.hasData) return const CircularProgressIndicator();
-        // Lógica de filtrado
+
       var documentosFiltrados = snapshot.data!.docs.where((doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         
-        // 1. Filtros de botones
         bool pasaCategoria = categoriasSeleccionadas.isEmpty || categoriasSeleccionadas.contains(data['categoria']);
         bool pasaEstado = estadosSeleccionados.isEmpty || estadosSeleccionados.contains(data['estado']);
         bool pasaTransaccion = transaccionesSeleccionadas.isEmpty || transaccionesSeleccionadas.contains(data['tipo_transaccion']);
 
-        // 2. Filtro de la barra de búsqueda
         bool pasaBusqueda = true;
         if (_textoBusqueda.isNotEmpty) {
           String nombreProducto = data.containsKey('nombre') ? _normalizarTexto(data['nombre']) : '';
           String autorProducto = data.containsKey('autor_marca') ? _normalizarTexto(data['autor_marca']) : '';
           
-          // Comprueba si el texto ingresado está contenido en el nombre o en el autor
           pasaBusqueda = nombreProducto.contains(_textoBusqueda) || autorProducto.contains(_textoBusqueda);
         }
 
         return pasaCategoria && pasaEstado && pasaTransaccion && pasaBusqueda;
       }).toList();
 
-      //Esto es por si no existen publicaciones con los filtros seleccionados diga que no hay
     if (documentosFiltrados.isEmpty) {
         return const Padding(
           padding: EdgeInsets.symmetric(vertical: 50.0),
@@ -534,42 +527,6 @@ void _mostrarDialogoFiltros() {
       }
 
       return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: 3, tarjetaSize: 400, smallVersion: false,);
-      
-      //comentado por si acaso, usar tarjeta builder
-      /*GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 25,
-          mainAxisSpacing: 40,
-          childAspectRatio: 0.7,
-        ),
-
-        itemCount: documentosFiltrados.length, // Usamos el tamaño de la lista filtrada
-        itemBuilder: (context, index) {
-        var producto = documentosFiltrados[index]; // Usamos los productos filtrados
-
-
-          
-          // Convertimos a Map para evitar el error de campos faltantes
-          Map<String, dynamic> data = producto.data() as Map<String, dynamic>;
-
-          //Extraemos los valores de forma segura
-          String titulo = data.containsKey('nombre') ? (data['nombre'] ?? 'Sin título') : 'Sin título';
-          String autor = data.containsKey('autor_marca') ? (data['autor_marca'] ?? 'Sin autor') : 'Sin autor';
-          String precio = data.containsKey('valor') ? (data['valor'] ?? '0') : '0';
-          String foto = data.containsKey('image_url') ? (data['image_url'] ?? "") : "";
-
-          //Enviamos los datos a la tarjeta
-          return TarjetaProducto(
-            titulo: titulo,
-            autor: autor,
-            precio: precio,
-            foto: foto,
-          );
-        },
-      );*/
     },
   ),
 ),

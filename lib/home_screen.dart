@@ -45,8 +45,12 @@ class HomeScreen extends StatelessWidget {
                       TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => PantallaCatalogo()));}, child: const Text('Catálogo', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 20),
                       TextButton(onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
-
+                        // CAMBIO AQUÍ, abre como Diálogo con fondo oscuro
+                        showDialog(
+                          context: context,
+                          barrierColor: Colors.black.withOpacity(0.5),
+                          builder: (BuildContext context) => const CrearProducto(),
+                        );
                       }, child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                       const SizedBox(width: 30),
                       PopupMenuButton<String>(
@@ -187,7 +191,12 @@ class HomeScreen extends StatelessWidget {
                       description: 'Sube tus libros, guías, apuntes o materiales y dales una segunda vida. Gestiona tus recursos de forma sencilla.',
                       onTap: () {
                       if (Auth.instance.chequearUsuario()) {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
+                        // CAMBIO AQUÍ:, abre como Diálogo con fondo oscuro
+                        showDialog(
+                          context: context,
+                          barrierColor: Colors.black.withOpacity(0.5),
+                          builder: (BuildContext context) => const CrearProducto(),
+                        );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
