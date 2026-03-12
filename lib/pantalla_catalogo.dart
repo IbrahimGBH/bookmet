@@ -11,8 +11,6 @@ import 'package:bookmet/dialogo_favoritos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:bookmet/dialogo_transaccion.dart';
 
-
-
 class PantallaCatalogo extends StatefulWidget {
   const PantallaCatalogo({super.key});
 
@@ -30,15 +28,16 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
   bool _estaBuscando = false;
   String _textoBusqueda = "";
   final TextEditingController _controladorBusqueda = TextEditingController();
-@override
+
+  @override
   void initState() {
     super.initState();
-    // Esto hace que la revisión se ejecute justo cuando la pantalla termina de cargar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _verificarWhatsApp(); 
       _escucharNuevasSolicitudes();
-  }); 
-} 
+    }); 
+  } 
+
   static StreamSubscription? _solicitudesSubscription;
   static final Set<String> _notificacionesMostradas = {};
 
@@ -62,7 +61,6 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
             _notificacionesMostradas.add(docId);
           }
         } else if (change.type == DocumentChangeType.removed) {
-          // Limpiamos el ID del registro si la transacción se elimina (cancela/rechaza)
           _notificacionesMostradas.remove(docId);
         }
       }
@@ -159,6 +157,7 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
       }
     }
   }
+
   String _normalizarTexto(String texto) {
     return texto.toLowerCase()
         .replaceAll('á', 'a')
@@ -175,7 +174,7 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
     super.dispose();
   }
 
-void _mostrarDialogoFiltros() {
+  void _mostrarDialogoFiltros() {
     List<String> tempCategorias = List.from(categoriasSeleccionadas);
     List<String> tempEstados = List.from(estadosSeleccionados);
     List<String> tempTransacciones = List.from(transaccionesSeleccionadas);
@@ -203,7 +202,6 @@ void _mostrarDialogoFiltros() {
                         ],
                       ),
                       const SizedBox(height: 20),
-
                       const Text("Tipo de Material", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Wrap(
                         spacing: 15,
@@ -222,7 +220,6 @@ void _mostrarDialogoFiltros() {
                         }).toList(),
                       ),
                       const SizedBox(height: 20),
-
                       const Text("Estado de Conservación", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Wrap(
                         spacing: 15,
@@ -241,7 +238,6 @@ void _mostrarDialogoFiltros() {
                         }).toList(),
                       ),
                       const SizedBox(height: 20),
-
                       const Text("Tipo de Transacción", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Wrap(
                         spacing: 15,
@@ -260,7 +256,6 @@ void _mostrarDialogoFiltros() {
                         }).toList(),
                       ),
                       const SizedBox(height: 30),
-
                       Center(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE5853B), padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)),
@@ -286,8 +281,6 @@ void _mostrarDialogoFiltros() {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -304,9 +297,7 @@ void _mostrarDialogoFiltros() {
             fit: BoxFit.contain,
           ),
         ),
-
         actions: [
-
           if (_estaBuscando)
             Container(
               width: 300,
@@ -362,9 +353,7 @@ void _mostrarDialogoFiltros() {
               child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             ),
           ],
-
           const SizedBox(width: 15),
-
           TextButton(
             onPressed: () {
               showDialog(
@@ -376,16 +365,13 @@ void _mostrarDialogoFiltros() {
             }, 
             child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))
           ),            
-                      
           const SizedBox(width: 15),
           TextButton(
             onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()),);}, 
             child: const Text('Inicio', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 15),
-          
           PopupMenuButton<String>(
-
             icon: const CircleAvatar(
               radius: 25,
               backgroundColor: Color(0xFFEA983E), 
@@ -393,7 +379,6 @@ void _mostrarDialogoFiltros() {
             ),
             iconSize: 50,
             onSelected: (String value) {
-        
               switch (value) {
                 case 'perfil':
                   showDialog(
@@ -405,8 +390,9 @@ void _mostrarDialogoFiltros() {
                     return MiPerfil(dialogWidth: dialogWidth, dialogHeight: dialogHeight); 
                     }
                   );
+                  break;
                 case 'editar':
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const EditarPerfil()));
                   break;
                 case 'cerrar_sesion':
                   Auth.instance.signOut(context);
@@ -440,14 +426,11 @@ void _mostrarDialogoFiltros() {
           ),
           const SizedBox(width: 30), 
         ],
-
       ),
-      
       body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 20),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: ClipRRect(
@@ -469,20 +452,16 @@ void _mostrarDialogoFiltros() {
                 ),
               ),
             ),
-            
             const SizedBox(height: 40),
-
-          Padding(
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text("Filtros:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 10),
-                  
                   GestureDetector(
                     onTap: _mostrarDialogoFiltros,
-
                     child: Container(
                       width: 300,
                       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
@@ -499,64 +478,111 @@ void _mostrarDialogoFiltros() {
                 ],
               ),
             ),
-
             const SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance.collection('productos').snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                  var documentosFiltrados = snapshot.data!.docs.where((doc) {
+                    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                    bool pasaCategoria = categoriasSeleccionadas.isEmpty || categoriasSeleccionadas.contains(data['categoria']);
+                    bool pasaEstado = estadosSeleccionados.isEmpty || estadosSeleccionados.contains(data['estado']);
+                    bool pasaTransaccion = transaccionesSeleccionadas.isEmpty || transaccionesSeleccionadas.contains(data['tipo_transaccion']);
+                    bool pasaBusqueda = true;
+                    if (_textoBusqueda.isNotEmpty) {
+                      String nombreProducto = data.containsKey('nombre') ? _normalizarTexto(data['nombre']) : '';
+                      String autorProducto = data.containsKey('autor_marca') ? _normalizarTexto(data['autor_marca']) : '';
+                      pasaBusqueda = nombreProducto.contains(_textoBusqueda) || autorProducto.contains(_textoBusqueda);
+                    }
+                    return pasaCategoria && pasaEstado && pasaTransaccion && pasaBusqueda;
+                  }).toList();
 
-           Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 40.0),
-
-  child: StreamBuilder(
-    
-    stream: FirebaseFirestore.instance.collection('productos').snapshots(),
-    builder: (context, snapshot) {
-      
-      if (!snapshot.hasData) return const CircularProgressIndicator();
-
-      var documentosFiltrados = snapshot.data!.docs.where((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        
-        bool pasaCategoria = categoriasSeleccionadas.isEmpty || categoriasSeleccionadas.contains(data['categoria']);
-        bool pasaEstado = estadosSeleccionados.isEmpty || estadosSeleccionados.contains(data['estado']);
-        bool pasaTransaccion = transaccionesSeleccionadas.isEmpty || transaccionesSeleccionadas.contains(data['tipo_transaccion']);
-
-        bool pasaBusqueda = true;
-        if (_textoBusqueda.isNotEmpty) {
-          String nombreProducto = data.containsKey('nombre') ? _normalizarTexto(data['nombre']) : '';
-          String autorProducto = data.containsKey('autor_marca') ? _normalizarTexto(data['autor_marca']) : '';
-          
-          pasaBusqueda = nombreProducto.contains(_textoBusqueda) || autorProducto.contains(_textoBusqueda);
-        }
-
-        return pasaCategoria && pasaEstado && pasaTransaccion && pasaBusqueda;
-      }).toList();
-
-    if (documentosFiltrados.isEmpty) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 50.0),
-          child: Center(
-            child: Text(
-              "No se encontraron publicaciones con los filtros seleccionados.",
-              style: TextStyle(
-                fontSize: 16, 
-                color: Colors.grey, 
-                fontWeight: FontWeight.bold
+                  if (documentosFiltrados.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 50.0),
+                      child: Center(
+                        child: Text(
+                          "No se encontraron publicaciones con los filtros seleccionados.",
+                          style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+                  return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: 3, tarjetaSize: 400, smallVersion: false);
+                },
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-        );
-      }
+            const SizedBox(height: 100),
 
-      return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: 3, tarjetaSize: 400, smallVersion: false,);
-    },
-  ),
-),
-            
-           const SizedBox(height: 100),
-          ]    
+            // FOOTER REDISEÑADO 
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 80),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFDAB9), 
+                borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'BookMet',
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black87),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '© 2026 Universidad Metropolitana\nTodos los derechos reservados.',
+                            style: TextStyle(color: Colors.black.withOpacity(0.5), fontSize: 14, height: 1.4),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          _buildFooterItem(Icons.email_outlined, 'bookmet@correo.unimet.edu.ve'),
+                          const SizedBox(height: 15),
+                          _buildFooterItem(Icons.phone_iphone_outlined, '+58 412 1234567'),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  const Divider(color: Colors.black12, thickness: 1),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Hecho para la comunidad Unimetana',
+                    style: TextStyle(color: Colors.black45, fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        
       ),
+    );
+  }
+
+  // Función de ayuda para los elementos del footer (ICONOS + TEXTO)
+  Widget _buildFooterItem(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          text,
+          style: const TextStyle(fontSize: 15, color: Colors.black87, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(width: 12),
+        Icon(icon, size: 22, color: const Color(0xFFE5853B)),
+      ],
     );
   }
 }
