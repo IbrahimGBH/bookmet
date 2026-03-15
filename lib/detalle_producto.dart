@@ -84,7 +84,6 @@ class DetalleProducto extends StatelessWidget {
     String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
     bool esMiPublicacion = (currentUserId != null && currentUserId == vendedorId);
 
-    // Widget to show when product is in exchange
     Widget intercambioEnCursoWidget = Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -292,8 +291,13 @@ class DetalleProducto extends StatelessWidget {
               const SizedBox(height: 24),
 
               // --- BOTONES Y LÓGICA ---
-              if (esMiPublicacion)
-                StreamBuilder<DocumentSnapshot>(
+              FutureBuilder<bool>(
+                future: Auth.instance.isAdmin(currentUserId ?? ""),
+                builder: (context, adminSnapshot) {
+                  bool isAdmin = adminSnapshot.data ?? false;
+
+                  if (esMiPublicacion || isAdmin) {
+                    return StreamBuilder<DocumentSnapshot>(
                   stream: fbase.snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
@@ -301,7 +305,7 @@ class DetalleProducto extends StatelessWidget {
                     }
                     var data = snapshot.data!.data() as Map<String, dynamic>?;
                     String disponibilidad = data != null && data.containsKey('disponibilidad') ? (data['disponibilidad'] ?? '') : '';
-                    if (disponibilidad == 'en transaccion') {
+                    if (disponibilidad == 'en transaccion' && !isAdmin) {
                       return StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('transacciones')
@@ -354,32 +358,34 @@ class DetalleProducto extends StatelessWidget {
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(); 
-                              showDialog(
-                              context: context,
-                              builder: (context) => PantallaEditarProducto(
-                                idProducto: idProducto,
-                                tituloActual: titulo,
-                                autorActual: autor,
-                                precioActual: precio,
-                                descripcionActual: descripcion,
-                                imagenActual: imageUrl,
-                              ),
-                              );
-                            },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue[100],
-                                foregroundColor: Colors.blue[900],
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              child: const Text('Editar', style: TextStyle(fontWeight: FontWeight.bold)),
+                        if (esMiPublicacion) ...[
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(); 
+                                showDialog(
+                                context: context,
+                                builder: (context) => PantallaEditarProducto(
+                                  idProducto: idProducto,
+                                  tituloActual: titulo,
+                                  autorActual: autor,
+                                  precioActual: precio,
+                                  descripcionActual: descripcion,
+                                  imagenActual: imageUrl,
+                                ),
+                                );
+                              },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[100],
+                                  foregroundColor: Colors.blue[900],
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: const Text('Editar', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
+                          const SizedBox(width: 16),
+                        ],
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () => _mostrarDialogoEliminar(context),
@@ -395,9 +401,9 @@ class DetalleProducto extends StatelessWidget {
                       ],
                     );
                   },
-                )
-              else
-                StreamBuilder<QuerySnapshot>(
+                );
+                  } else {
+                    return StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('transacciones')
                       .where('id_producto', isEqualTo: idProducto)
@@ -437,7 +443,10 @@ class DetalleProducto extends StatelessWidget {
                       ),
                     );
                   },
-                ),
+                );
+                  }
+                }
+              ),
 
               const SizedBox(height: 12),
               FutureBuilder(

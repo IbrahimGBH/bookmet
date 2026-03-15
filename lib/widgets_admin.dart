@@ -2,6 +2,7 @@
 import 'package:bookmet/gestion_filtros.dart';
 import 'package:bookmet/gestion_usuarios.dart';
 import 'package:bookmet/pantalla_tdia.dart';
+import 'package:bookmet/pantalla_mod_publicaciones.dart';
 import 'package:bookmet/pantalla_usuarios.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -213,6 +214,12 @@ Widget sidebarItem(IconData icon, String label, bool isActive, BuildContext cont
           else if (label == "DashBoard") {
             Navigator.pop(context);
             // Aquí podrías añadir un Navigator.push si no estás ya en AdminView
+          }
+          else if (label == "Moderación") {
+            Navigator.pop(context);
+            Navigator.push(
+              context, MaterialPageRoute(builder: (context) => const PantallaModPublicaciones())
+            );
           }
         },
         child: Row(

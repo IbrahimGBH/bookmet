@@ -1,4 +1,5 @@
 
+import 'package:bookmet/pantalla_mod_publicaciones.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
@@ -164,7 +165,7 @@ class AdminView extends StatelessWidget {
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => const PantallaModPublicaciones()));},
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3F85D5),
                           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),

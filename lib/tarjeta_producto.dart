@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:bookmet/detalle_producto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
-import 'package:firebase_auth/firebase_auth.dart';   
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:bookmet/auth.dart';  
 
 class TarjetaProducto extends StatelessWidget {
   final String idProducto; // NUEVO
@@ -90,30 +91,37 @@ class TarjetaProducto extends StatelessWidget {
                 ),
               ),
               
-              Positioned(
-                top: 10,
-                right: 10,
-                child: user == null 
-                  ? const Icon(Icons.favorite_border, color: Color(0xFFC0834A), size: 30)
-                  : StreamBuilder<DocumentSnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('usuarios')
-                          .doc(user.uid)
-                          .collection('favoritos')
-                          .doc(titulo)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        bool esFavorito = snapshot.hasData && snapshot.data!.exists;
-                        return IconButton(
-                          icon: Icon(
-                            esFavorito ? Icons.favorite : Icons.favorite_border, 
-                            color: const Color(0xFFC0834A), 
-                            size: 30
-                          ),
-                          onPressed: () => _presionarCorazon(context),
-                        );
-                      },
-                    ),
+              FutureBuilder<bool>(
+                future: user != null ? Auth.instance.isAdmin(user.uid) : Future.value(false),
+                builder: (context, adminSnapshot) {
+                  if (adminSnapshot.data == true) return const SizedBox();
+
+                  return Positioned(
+                    top: 10,
+                    right: 10,
+                    child: user == null 
+                      ? const Icon(Icons.favorite_border, color: Color(0xFFC0834A), size: 30)
+                      : StreamBuilder<DocumentSnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('usuarios')
+                              .doc(user.uid)
+                              .collection('favoritos')
+                              .doc(titulo)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            bool esFavorito = snapshot.hasData && snapshot.data!.exists;
+                            return IconButton(
+                              icon: Icon(
+                                esFavorito ? Icons.favorite : Icons.favorite_border, 
+                                color: const Color(0xFFC0834A), 
+                                size: 30
+                              ),
+                              onPressed: () => _presionarCorazon(context),
+                            );
+                          },
+                        ),
+                  );
+                }
               ),
             ],
           ),
