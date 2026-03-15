@@ -1,4 +1,5 @@
 import 'package:bookmet/registrarse.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/home_screen.dart';
@@ -136,35 +137,70 @@ class _InicioSesionState extends State<InicioSesion> {
                           ),
                         );
                       } else {
-                        String mensaje = await Auth.instance.getNombre(
-                          Auth.instance.getUid(),
-                        );
-                        bool esAdmin = await Auth.instance.isAdmin(Auth.instance.getUid());
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Center(
-                              child: esAdmin == false ? Text('¡Bienvenido a Bookmet, $mensaje!') : Text('Bienvenido, admin'),
-                            ),
-                          ),
-                        );
-                        Future.delayed(const Duration(seconds: 1), () {
-                          if (context.mounted && (esAdmin==false)) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => const PantallaCatalogo()),
-                            );
-                          }
-                        });
-                      }
-                      
-                    } catch (e) {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Error al iniciar sesión'),
-                        ),
-                      );
-                    }
-                  },
+      
+      String uid = cred.user!.uid;
+
+      // Aqui consulta si la persona esta activa. 
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(uid)
+          .get();
+
+      if (userDoc.exists) {
+        Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
+        bool estaActivo = data['activo'] ?? true; 
+
+        if (!estaActivo) {
+      
+          await Auth.instance.fAuth.signOut(); 
+          messenger.showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+              content: Text(
+                'El usuario no se encuentra activo. Por favor, póngase en contacto con el soporte técnico.',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+          return; 
+        }
+      }
+
+
+      String nombre = await Auth.instance.getNombre(uid);
+      bool esAdmin = await Auth.instance.isAdmin(uid);
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Center(
+            child: esAdmin == false 
+                ? Text('¡Bienvenido a Bookmet, $nombre!') 
+                : const Text('Bienvenido, admin'),
+          ),
+        ),
+      );
+
+      Future.delayed(const Duration(seconds: 1), () {
+        if (context.mounted) {
+          if (esAdmin) {
+            // Si es admin va a su vista 
+            
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const PantallaCatalogo()),
+            );
+          }
+        }
+      });
+    }
+  } catch (e) {
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Error al iniciar sesión o cuenta inhabilitada')),
+    );
+  }
+},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE5853B),
                     shape: RoundedRectangleBorder(

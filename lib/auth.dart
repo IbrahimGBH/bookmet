@@ -21,6 +21,17 @@ class Auth {
         email: email,
         password: password,
       );
+      // esto es para validar si la persona esta activa o inactiva
+      String uid = cred.user!.uid;
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('usuarios').doc(uid).get();
+    
+   
+    bool estaActivo = (userDoc.data() as Map<String, dynamic>)['activo'] ?? true;
+
+    if (!estaActivo) {
+      await FirebaseAuth.instance.signOut(); // Lo sacamos inmediatamente
+      throw FirebaseAuthException(code: 'user-disabled', message: 'Cuenta inactiva');
+    }
       bool esAdmin = await isAdmin(getUid());
       if(esAdmin==false){
       Navigator.push(

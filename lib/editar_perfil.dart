@@ -5,32 +5,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 
 class EditarPerfil extends StatefulWidget {
-  const EditarPerfil({super.key});
+const EditarPerfil({super.key});
+@override
 
-  @override
-  State<EditarPerfil> createState() => _EditarPerfilState();
+State<EditarPerfil> createState() => _EditarPerfilState();
 }
 
 class _EditarPerfilState extends State<EditarPerfil> {
-   Map<String, bool> seleccionados = {
-    "Ingeniería": false, "Psicología": false, "Idiomas": false, 
-    "Turismo": false, "Comunicación": false, "Derecho": false, "Otros": false
-  };
-  //final Set<String> _selectedIntereses = {};
-  Future<String> name = Auth.instance.getNombre(Auth.instance.getUid());
-  Future<String> lastname = Auth.instance.getApellido(Auth.instance.getUid());
-  Future<String> career = Auth.instance.getCarrera(Auth.instance.getUid());
-  Future<String> id = Auth.instance.getCarnet(Auth.instance.getUid());
-  //Future<String> pAdress = Auth.instance.getPaypal(Auth.instance.getUid());
-  Future<String> wAdress = Auth.instance.getWhatsapp(Auth.instance.getUid());
-  final TextEditingController apellidoController = TextEditingController();
-  final TextEditingController nombreController = TextEditingController();
-  final TextEditingController carnetController = TextEditingController();
-  final TextEditingController carreraController = TextEditingController();
-  final TextEditingController whatsappController = TextEditingController();
-  //final TextEditingController paypalController = TextEditingController();
 
+Future<String> name = Auth.instance.getNombre(Auth.instance.getUid());
+Future<String> lastname = Auth.instance.getApellido(Auth.instance.getUid());
+Future<String> career = Auth.instance.getCarrera(Auth.instance.getUid());
+Future<String> id = Auth.instance.getCarnet(Auth.instance.getUid());
+Future<String> wAdress = Auth.instance.getWhatsapp(Auth.instance.getUid());
 
+final TextEditingController apellidoController = TextEditingController();
+final TextEditingController nombreController = TextEditingController();
+final TextEditingController carnetController = TextEditingController();
+final TextEditingController whatsappController = TextEditingController();
+
+String? carreraSeleccionada;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,27 +134,77 @@ class _EditarPerfilState extends State<EditarPerfil> {
 
 
   
-  Widget _crearCheck(String titulo) {
-    return CheckboxListTile(
-      title: Text(titulo, style: const TextStyle(fontSize: 14)),
-      value: seleccionados[titulo], 
-      onChanged: (bool? valor) {
-        setState(() {
-          seleccionados[titulo] = valor!;
-        });
-      },
-      controlAffinity: ListTileControlAffinity.leading,
-    );
-  }
+
 
   Widget _buildDatosAcademicos(){
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text("Datos académicos", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
-        _buildTextField("Carrera", carreraController, career, formatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]')),
-        ]),
+       const Text("Carrera", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        
+        FutureBuilder<String>(
+        future: career,
+        builder: (context, snapshotCareer) {
+          
+          if (snapshotCareer.connectionState == ConnectionState.waiting) {
+            return const LinearProgressIndicator();
+          }
+
+          return StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('carreras').snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const LinearProgressIndicator();
+
+              var docs = snapshot.data!.docs;
+              
+             
+              String? carreraDelUser = snapshotCareer.data?.trim();
+
+            
+              if (carreraSeleccionada == null && carreraDelUser != null) {
+               
+                bool existe = docs.any((d) => d['nombre'].toString().trim() == carreraDelUser);
+                if (existe) {
+                  carreraSeleccionada = carreraDelUser;
+                }
+              }
+
+              final bool valorEsValido = docs.any((d) => d['nombre'] == carreraSeleccionada);
+              final String? valorFinal = valorEsValido ? carreraSeleccionada : null;
+
+              return DropdownButtonFormField<String>(
+                value: valorFinal,
+                isExpanded: true,
+                hint: const Text("Selecciona tu carrera"),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: docs.map((doc) {
+                  bool activa = doc['activo'] == true;
+                  String nombre = doc['nombre'];
+                  return DropdownMenuItem<String>(
+                    value: nombre,
+                    child: Text(
+                      activa ? nombre : "$nombre (Inactiva)",
+                      style: TextStyle(color: activa ? Colors.black : Colors.red),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (nuevoValor) {
+                  setState(() {
+                    carreraSeleccionada = nuevoValor;
+                  });
+                },
+              );
+            },
+          );
+        },
+      ),
+              const SizedBox(height: 20),
       _buildTextField(
   "Link Whatsapp", 
   whatsappController, 
@@ -177,14 +221,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
     return null; 
   },
 ),
-        const SizedBox(height: 20),
-        _crearCheck("Ingeniería"),
-        _crearCheck("Psicología"),
-        _crearCheck("Idiomas"),
-        _crearCheck("Turismo"),
-        _crearCheck("Comunicación"),
-        _crearCheck("Derecho"),
-        _crearCheck("Otros"),
+      
       ],
     );
   }
@@ -240,8 +277,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
           await FirebaseFirestore.instance.collection('usuarios').doc(userId).set({
                       'nombre': nombreController.text,
                       'apellido': apellidoController.text,
-                      'carrera': carreraController.text,
-                      'intereses': seleccionados.entries.where((e) => e.value).map((e) => e.key).toList(),
+                      'carrera': carreraSeleccionada,
                       'link_whatsapp':whatsappController.text,
                       'carnet_id':carnetController.text,
           });
