@@ -259,8 +259,11 @@ class _VendedorDialogState extends State<VendedorDialog> {
                   .orderBy('fecha', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                var docs = snapshot.data!.docs;
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFFE5853B)));
+                }
+                
+                var docs = snapshot.data?.docs ?? [];
                 if (docs.isEmpty) return const Center(child: Text("Aún no hay comentarios."));
 
                 return ListView.builder(
@@ -269,19 +272,36 @@ class _VendedorDialogState extends State<VendedorDialog> {
                     var data = docs[index].data() as Map<String, dynamic>;
                     int calificacion = data['calificacion'] ?? 0;
                     String comentario = data['comentario'] ?? '';
-                    
+                    String autor = data['autor'] ?? 'Usuario'; 
+
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ListTile(
                         leading: const CircleAvatar(backgroundColor: Color(0xFFFFDAB9), child: Icon(Icons.person, color: Colors.white)),
-                        title: Row(
-                          children: List.generate(5, (i) => Icon(
-                            i < calificacion ? Icons.star : Icons.star_border,
-                            size: 16,
-                            color: const Color(0xFFFFCD60),
-                          )),
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                           
+                            Text(
+                              autor, 
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)
+                            ),
+                            const SizedBox(height: 4),
+                            // Las estrellitas debajo del nombre
+                            Row(
+                              children: List.generate(5, (i) => Icon(
+                                i < calificacion ? Icons.star : Icons.star_border,
+                                size: 16,
+                                color: const Color(0xFFFFCD60),
+                              )),
+                            ),
+                          ],
                         ),
-                        subtitle: Text(comentario.isNotEmpty ? comentario : "Sin comentario escrito."),
+                        // El comentario se muestra como subtítulo
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 6.0),
+                          child: Text(comentario),
+                        ),
                       ),
                     );
                   },
