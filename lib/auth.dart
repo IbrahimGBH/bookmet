@@ -17,10 +17,21 @@ class Auth {
     String password,
   ) async {
     try {
-      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final cred = await fAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      // esto es para validar si la persona esta activa o inactiva
+      String uid = cred.user!.uid;
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('usuarios').doc(uid).get();
+    
+   
+    bool estaActivo = (userDoc.data() as Map<String, dynamic>)['activo'] ?? true;
+
+    if (!estaActivo) {
+      await fAuth.signOut(); // Lo sacamos inmediatamente
+      throw FirebaseAuthException(code: 'user-disabled', message: 'Cuenta inactiva');
+    }
       bool esAdmin = await isAdmin(getUid());
       if(esAdmin==false){
       Navigator.push(
@@ -46,7 +57,7 @@ class Auth {
   
 Future<void> signOut(BuildContext context) async {
   try {
-    await FirebaseAuth.instance.signOut();
+    await fAuth.signOut();
     Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()));
   } catch (e) {
      //manejo del error (por implementar)
@@ -66,6 +77,15 @@ Future<void> signOut(BuildContext context) async {
     final User? usuario = fAuth.currentUser;
     if(usuario != null){
       return usuario.uid;
+    }else{
+      return "No se ha iniciado sesión";
+    }
+  }
+
+  String? getEmail(){
+    final User? usuario = fAuth.currentUser;
+    if(usuario != null){
+      return usuario.email;
     }else{
       return "No se ha iniciado sesión";
     }

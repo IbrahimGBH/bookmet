@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  // Variable para controlar la visibilidad de la contraseña
+  bool _isPasswordObscured = true;
 
   @override
   Widget build(BuildContext context) {
@@ -77,11 +85,25 @@ class LoginScreen extends StatelessWidget {
               // Campo de Contraseña
               TextFormField(
                 // TODO: Integrante 2 - Conectar el controller de la contraseña aquí
-                obscureText: true,
+                obscureText: _isPasswordObscured,
                 decoration: InputDecoration(
                   labelText: 'Contraseña',
                   prefixIcon: const Icon(Icons.lock_outline, color: colorPrincipal),
-                  suffixIcon: const Icon(Icons.visibility_off, color: Colors.grey),
+                  // CAMBIO DE PRUEBA: Usaremos Iconos de Remoción/Adición para probar visibilidad
+                  suffixIcon: Material(
+                    color: Colors.transparent,
+                    child: IconButton(
+                      icon: Icon(
+                        _isPasswordObscured ? Icons.remove_red_eye : Icons.remove_red_eye_outlined,
+                        color: colorPrincipal, // Color azul para que resalte
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordObscured = !_isPasswordObscured;
+                        });
+                      },
+                    ),
+                  ),
                   filled: true,
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(

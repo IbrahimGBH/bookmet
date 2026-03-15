@@ -1,8 +1,11 @@
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
+import 'package:bookmet/widgets_admin.dart';
 
 class AdminView extends StatelessWidget {
-  AdminView({super.key});
+  const AdminView({super.key});
   
 
   @override
@@ -10,19 +13,21 @@ class AdminView extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFEEEEEE),
       //AppBar Superior
-      drawer: Drawer(
-        width: 250,
-        backgroundColor: const Color(0xFFE5853B),
-          child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-                _sidebarItem(Icons.dashboard, "DashBoard", false),
-                _sidebarItem(Icons.filter_list, "Gestionar Filtros", false),
-                _sidebarItem(Icons.remove_red_eye, "Moderación", false),
-            ],
-          ),
-      ),
+        drawer: Drawer(
+    width: 250,
+    backgroundColor: const Color(0xFFE5853B),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+       
+        sidebarItem(Icons.dashboard, "DashBoard", false, context),
+         sidebarItem(Icons.people, "Directorio Usuarios", false, context),
+        sidebarItem(Icons.filter_list, "Gestionar Filtros", false, context),
+        sidebarItem(Icons.remove_red_eye, "Moderación", false, context),
+      ],
+    ),
+  ),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE5853B),
         elevation: 0,
@@ -76,15 +81,49 @@ class AdminView extends StatelessWidget {
                   const SizedBox(height: 30),
                   
                   //Métricas
-                  Row(
-                    children: [
-                      _metricCard("Usuarios Activos", "null", const Color(0xFF3F85D5)),
-                      const SizedBox(width: 20),
-                      _metricCard("Intercambios del día", "null", const Color(0xFF59BBA3)),
-                      const SizedBox(width: 20),
-                      _metricCard("Intercambios pendientes", "null", const Color(0xFFE05555)),
-                    ],
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance.collection('usuarios').snapshots(),
+                    builder: (context, snapshot) {
+                      
+                      String totalUsuarios = "...";
+                      if (snapshot.hasData) {
+                        // Tomamos el total y le restamos 1 (tu cuenta de admin)
+                        int calculo = snapshot.data!.docs.length - 1;
+                        totalUsuarios = calculo.toString();
+                      }
+
+                      return StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('transacciones')
+                            .where('fecha_inicio', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)))
+                            .snapshots(),
+                        builder: (context, snapshotDia) {
+                          String intercambiosDia = snapshotDia.hasData ? snapshotDia.data!.docs.length.toString() : "...";
+
+                          return StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('transacciones')
+                                .where('estado', isEqualTo: 'pendiente')
+                                .snapshots(),
+                            builder: (context, snapshotPendientes) {
+                              String intercambiosPendientes = snapshotPendientes.hasData ? snapshotPendientes.data!.docs.length.toString() : "...";
+
+                              return Row(
+                                children: [
+                                  metricCard("Usuarios Activos", totalUsuarios, const Color(0xFF3F85D5), context),
+                                  const SizedBox(width: 20),
+                                  metricCard("Transacciones del día", intercambiosDia, const Color(0xFF59BBA3), context),
+                                  const SizedBox(width: 20),
+                                  metricCard("Transacciones pendientes", intercambiosPendientes, const Color(0xFFE05555), context),
+                                ],
+                              );
+                            }
+                          );
+                        }
+                      );
+                    },
                   ),
+                  
                   const SizedBox(height: 40),
                   
                   //Gráfica y Filtros
@@ -94,7 +133,7 @@ class AdminView extends StatelessWidget {
                       // Espacio para Gráfica
                       Expanded(
                         flex: 2,
-                        child: _sectionContainer(
+                        child: sectionContainer(
                           title: "Métricas de Demanda Académica",
                           child: Container(
                             height: 250,
@@ -113,14 +152,14 @@ class AdminView extends StatelessWidget {
                       //Gestión de Filtros
                       Expanded(
                         flex: 1,
-                        child: _filterManager(),
-                      ),
+                        child: filterManager(context)),
+                      
                     ],
                   ),
                   const SizedBox(height: 30),
                   
                   //Moderación
-                  _sectionContainer(
+                  sectionContainer(
                     title: "Moderación de Publicaciones",
                     child: Align(
                       alignment: Alignment.centerRight,
@@ -143,107 +182,6 @@ class AdminView extends StatelessWidget {
     );
   }
 
-  //Widgets
 
-  Widget _sidebarItem(IconData icon, String label, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-      color: isActive ? Colors.black12 : Colors.transparent,
-      child: SizedBox(
-        height: 50,
-        child: TextButton(
-          onPressed: (){},
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.white),
-              const SizedBox(width: 15),
-              Text(label, style: const TextStyle(color: Colors.white, fontSize: 16),textAlign: TextAlign.center,),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _metricCard(String title, String value, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(25),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: Column(
-          children: [
-            Text(title, style: const TextStyle(color: Colors.white, fontSize: 18)),
-            const SizedBox(height: 10),
-            Text(value, style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionContainer({required String title, required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 20),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _filterManager() {
-    List<String> tags = ["Ing. Civil", "Psicología", "Ing. Química", "Derecho", "Administración"];
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("Gestionar Filtros", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 15),
-          ...tags.map((tag) => Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE5853B),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(tag, style: const TextStyle(color: Colors.white, fontSize: 12)),
-                ),
-                const Icon(Icons.cancel_outlined, color: Color(0xFFE5853B), size: 20),
-              ],
-            ),
-          )),
-          const SizedBox(height: 15),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F85D5)),
-              child: const Text("+ Añadir Carrera", style: TextStyle(color: Colors.white)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

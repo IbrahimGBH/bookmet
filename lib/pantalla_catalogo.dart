@@ -1,4 +1,5 @@
 import 'package:bookmet/home_screen.dart';
+import 'dart:async';
 import 'package:bookmet/tarjeta_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/crear_producto.dart';
@@ -9,8 +10,6 @@ import 'package:bookmet/mi_perfil.dart';
 import 'package:bookmet/dialogo_favoritos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:bookmet/dialogo_transaccion.dart';
-
-
 
 class PantallaCatalogo extends StatefulWidget {
   const PantallaCatalogo({super.key});
@@ -29,73 +28,87 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
   bool _estaBuscando = false;
   String _textoBusqueda = "";
   final TextEditingController _controladorBusqueda = TextEditingController();
-@override
+
+  @override
   void initState() {
     super.initState();
-    // Esto hace que la revisión se ejecute justo cuando la pantalla termina de cargar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _verificarWhatsApp(); 
-      Future<void> _verificarSolicitudes() async {
+      _escucharNuevasSolicitudes();
+    }); 
+  } 
+
+  static StreamSubscription? _solicitudesSubscription;
+  static final Set<String> _notificacionesMostradas = {};
+
+  void _escucharNuevasSolicitudes() {
+    _solicitudesSubscription?.cancel();
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // 1. Buscamos en 'transacciones' solicitudes pendientes para este vendedor
-    final query = await FirebaseFirestore.instance
+    final query = FirebaseFirestore.instance
         .collection('transacciones')
         .where('vendedor_id', isEqualTo: user.uid)
         .where('estado', isEqualTo: 'pendiente')
-        .where('aceptada', isEqualTo: false)
-        .get();
+        .where('aceptada', isEqualTo: false);
 
-    // 2. Si encontramos alguno, lanzamos la alerta
-    if (query.docs.isNotEmpty) {
-      for (var txDoc in query.docs) {
-        if (!mounted) return;
-        
-        final datosTx = txDoc.data();
-        final String idProducto = datosTx['id_producto'];
-        
-        // Obtenemos datos del producto para el mensaje
-        final prodDoc = await FirebaseFirestore.instance.collection('productos').doc(idProducto).get();
-        final String nombreProducto = prodDoc.exists ? (prodDoc.data()?['nombre'] ?? 'un artículo') : 'un artículo';
-
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('¡Nueva Solicitud! 🎉'),
-              content: Text('Alguien ha solicitado tu producto "$nombreProducto".\n\n¿Deseas ver la solicitud?'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Luego', style: TextStyle(color: Colors.grey)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // Abrimos el diálogo existente que gestiona la transacción
-                    showDialog(
-                      context: context,
-                      builder: (context) => TDialog(idProducto: idProducto, vendedorId: user.uid),
-                    );
-                  },
-                  child: const Text('Ver solicitud', style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            );
-          },
-        );
+    _solicitudesSubscription = query.snapshots().listen((snapshot) {
+      for (var change in snapshot.docChanges) {
+        final docId = change.doc.id;
+        if (change.type == DocumentChangeType.added) {
+          if (!_notificacionesMostradas.contains(docId)) {
+            _mostrarDialogoSolicitud(change.doc);
+            _notificacionesMostradas.add(docId);
+          }
+        } else if (change.type == DocumentChangeType.removed) {
+          _notificacionesMostradas.remove(docId);
+        }
       }
-    }
-   }
-    
-   _verificarSolicitudes(); 
-  }); 
-} 
+    });
+  }
+
+  Future<void> _mostrarDialogoSolicitud(DocumentSnapshot txDoc) async {
+    if (!mounted) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final datosTx = txDoc.data() as Map<String, dynamic>;
+    final String idProducto = datosTx['id_producto'];
+
+    final prodDoc = await FirebaseFirestore.instance.collection('productos').doc(idProducto).get();
+    final String nombreProducto = prodDoc.exists ? (prodDoc.data()?['nombre'] ?? 'un artículo') : 'un artículo';
+    final String compradorId = datosTx['comprador_id'];
+
+    final nombreComprador = await Auth.instance.getNombre(compradorId);
+    final apellidoComprador = await Auth.instance.getApellido(compradorId);
+    final String nombreCompleto = '$nombreComprador $apellidoComprador'.trim();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('¡Nueva Solicitud! 🎉'),
+          content: Text('${nombreCompleto.isNotEmpty ? nombreCompleto : 'Un usuario'} ha solicitado tu producto "$nombreProducto".\n\n¿Deseas ver la solicitud?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Luego', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              onPressed: () {
+                Navigator.pop(context);
+                showDialog(context: context, builder: (context) => TDialog(idProducto: idProducto, vendedorId: user.uid));
+              },
+              child: const Text('Ver solicitud', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Future<void> _verificarWhatsApp() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -144,6 +157,7 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
       }
     }
   }
+
   String _normalizarTexto(String texto) {
     return texto.toLowerCase()
         .replaceAll('á', 'a')
@@ -154,7 +168,13 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
         .replaceAll('ü', 'u');
   }
 
-void _mostrarDialogoFiltros() {
+  @override
+  void dispose() {
+    _controladorBusqueda.dispose();
+    super.dispose();
+  }
+
+  void _mostrarDialogoFiltros() {
     List<String> tempCategorias = List.from(categoriasSeleccionadas);
     List<String> tempEstados = List.from(estadosSeleccionados);
     List<String> tempTransacciones = List.from(transaccionesSeleccionadas);
@@ -182,7 +202,6 @@ void _mostrarDialogoFiltros() {
                         ],
                       ),
                       const SizedBox(height: 20),
-
                       const Text("Tipo de Material", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Wrap(
                         spacing: 15,
@@ -201,7 +220,6 @@ void _mostrarDialogoFiltros() {
                         }).toList(),
                       ),
                       const SizedBox(height: 20),
-
                       const Text("Estado de Conservación", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Wrap(
                         spacing: 15,
@@ -220,7 +238,6 @@ void _mostrarDialogoFiltros() {
                         }).toList(),
                       ),
                       const SizedBox(height: 20),
-
                       const Text("Tipo de Transacción", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Wrap(
                         spacing: 15,
@@ -239,7 +256,6 @@ void _mostrarDialogoFiltros() {
                         }).toList(),
                       ),
                       const SizedBox(height: 30),
-
                       Center(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE5853B), padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)),
@@ -265,18 +281,14 @@ void _mostrarDialogoFiltros() {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // Color melocotón clarito del diseño
         backgroundColor: const Color(0xFFFFEAC5), 
         elevation: 0,
         toolbarHeight: 80,
-        // LOGO ARRIBA A LA IZQUIERDA
         leadingWidth: 150, 
         leading: Padding(
           padding: const EdgeInsets.only(left: 20.0),
@@ -285,12 +297,10 @@ void _mostrarDialogoFiltros() {
             fit: BoxFit.contain,
           ),
         ),
-
         actions: [
-          // BARRA DE BÚSQUEDA CONDICIONAL
           if (_estaBuscando)
             Container(
-              width: 300, // Ancho de la barra de búsqueda
+              width: 300,
               margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -298,7 +308,7 @@ void _mostrarDialogoFiltros() {
               ),
               child: TextField(
                 controller: _controladorBusqueda,
-                autofocus: true, // Para que el teclado se abra de una vez
+                autofocus: true,
                 decoration: InputDecoration(
                   hintText: 'Buscar por nombre o autor...',
                   hintStyle: const TextStyle(fontSize: 14),
@@ -323,7 +333,6 @@ void _mostrarDialogoFiltros() {
               ),
             )
           else ...[
-            // LUPITA Y FAVORITOS (SOLO SE MUESTRAN SI NO SE ESTÁ BUSCANDO)
             IconButton(
               icon: const Icon(Icons.search, color: Colors.black, size: 28),
               onPressed: () {
@@ -343,26 +352,26 @@ void _mostrarDialogoFiltros() {
               },
               child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             ),
-          ], // FIN BARRA DE BÚSQUEDA CONDICIONAL
-
+          ],
           const SizedBox(width: 15),
           TextButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const CrearProducto()));
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                barrierColor: Colors.black54,
+                builder: (context) => const CrearProducto(),
+              );
             }, 
             child: const Text('Publicar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold))
           ),            
-                      
           const SizedBox(width: 15),
           TextButton(
             onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()),);}, 
             child: const Text('Inicio', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 15),
-          
-          // BOTÓN DE LA PERSONITA 
           PopupMenuButton<String>(
-
             icon: const CircleAvatar(
               radius: 25,
               backgroundColor: Color(0xFFEA983E), 
@@ -370,7 +379,6 @@ void _mostrarDialogoFiltros() {
             ),
             iconSize: 50,
             onSelected: (String value) {
-        
               switch (value) {
                 case 'perfil':
                   showDialog(
@@ -382,8 +390,9 @@ void _mostrarDialogoFiltros() {
                     return MiPerfil(dialogWidth: dialogWidth, dialogHeight: dialogHeight); 
                     }
                   );
+                  break;
                 case 'editar':
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const EditarPerfil()));
                   break;
                 case 'cerrar_sesion':
                   Auth.instance.signOut(context);
@@ -417,17 +426,11 @@ void _mostrarDialogoFiltros() {
           ),
           const SizedBox(width: 30), 
         ],
-
       ),
-      
       body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 20),
-
-
-
-// IMAGEN DEL CATÁLOGO
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: ClipRRect(
@@ -449,21 +452,16 @@ void _mostrarDialogoFiltros() {
                 ),
               ),
             ),
-            
-
-            
             const SizedBox(height: 40),
-          Padding(
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text("Filtros:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 10),
-                  
                   GestureDetector(
                     onTap: _mostrarDialogoFiltros,
-
                     child: Container(
                       width: 300,
                       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
@@ -480,105 +478,111 @@ void _mostrarDialogoFiltros() {
                 ],
               ),
             ),
-
             const SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance.collection('productos').snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                  var documentosFiltrados = snapshot.data!.docs.where((doc) {
+                    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                    bool pasaCategoria = categoriasSeleccionadas.isEmpty || categoriasSeleccionadas.contains(data['categoria']);
+                    bool pasaEstado = estadosSeleccionados.isEmpty || estadosSeleccionados.contains(data['estado']);
+                    bool pasaTransaccion = transaccionesSeleccionadas.isEmpty || transaccionesSeleccionadas.contains(data['tipo_transaccion']);
+                    bool pasaBusqueda = true;
+                    if (_textoBusqueda.isNotEmpty) {
+                      String nombreProducto = data.containsKey('nombre') ? _normalizarTexto(data['nombre']) : '';
+                      String autorProducto = data.containsKey('autor_marca') ? _normalizarTexto(data['autor_marca']) : '';
+                      pasaBusqueda = nombreProducto.contains(_textoBusqueda) || autorProducto.contains(_textoBusqueda);
+                    }
+                    return pasaCategoria && pasaEstado && pasaTransaccion && pasaBusqueda;
+                  }).toList();
 
-          
-           Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 40.0),
-
-  child: StreamBuilder(
-    
-    stream: FirebaseFirestore.instance.collection('productos').snapshots(),
-    builder: (context, snapshot) {
-      
-      if (!snapshot.hasData) return const CircularProgressIndicator();
-        // Lógica de filtrado
-      var documentosFiltrados = snapshot.data!.docs.where((doc) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        
-        // 1. Filtros de botones
-        bool pasaCategoria = categoriasSeleccionadas.isEmpty || categoriasSeleccionadas.contains(data['categoria']);
-        bool pasaEstado = estadosSeleccionados.isEmpty || estadosSeleccionados.contains(data['estado']);
-        bool pasaTransaccion = transaccionesSeleccionadas.isEmpty || transaccionesSeleccionadas.contains(data['tipo_transaccion']);
-
-        // 2. Filtro de la barra de búsqueda
-        bool pasaBusqueda = true;
-        if (_textoBusqueda.isNotEmpty) {
-          String nombreProducto = data.containsKey('nombre') ? _normalizarTexto(data['nombre']) : '';
-          String autorProducto = data.containsKey('autor_marca') ? _normalizarTexto(data['autor_marca']) : '';
-          
-          // Comprueba si el texto ingresado está contenido en el nombre o en el autor
-          pasaBusqueda = nombreProducto.contains(_textoBusqueda) || autorProducto.contains(_textoBusqueda);
-        }
-
-        return pasaCategoria && pasaEstado && pasaTransaccion && pasaBusqueda;
-      }).toList();
-
-      //Esto es por si no existen publicaciones con los filtros seleccionados diga que no hay
-    if (documentosFiltrados.isEmpty) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 50.0),
-          child: Center(
-            child: Text(
-              "No se encontraron publicaciones con los filtros seleccionados.",
-              style: TextStyle(
-                fontSize: 16, 
-                color: Colors.grey, 
-                fontWeight: FontWeight.bold
+                  if (documentosFiltrados.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 50.0),
+                      child: Center(
+                        child: Text(
+                          "No se encontraron publicaciones con los filtros seleccionados.",
+                          style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+                  return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: 3, tarjetaSize: 400, smallVersion: false);
+                },
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-        );
-      }
+            const SizedBox(height: 100),
 
-      return TarjetaBuilder(filtro: [documentosFiltrados], cantidadColumnas: 3, tarjetaSize: 400, smallVersion: false,);
-      
-      //comentado por si acaso, usar tarjeta builder
-      /*GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 25,
-          mainAxisSpacing: 40,
-          childAspectRatio: 0.7,
+            // FOOTER REDISEÑADO 
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 80),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFDAB9), 
+                borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'BookMet',
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black87),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '© 2026 Universidad Metropolitana\nTodos los derechos reservados.',
+                            style: TextStyle(color: Colors.black.withOpacity(0.5), fontSize: 14, height: 1.4),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          _buildFooterItem(Icons.email_outlined, 'bookmet@correo.unimet.edu.ve'),
+                          const SizedBox(height: 15),
+                          _buildFooterItem(Icons.phone_iphone_outlined, '+58 412 1234567'),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  const Divider(color: Colors.black12, thickness: 1),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Hecho para la comunidad Unimetana',
+                    style: TextStyle(color: Colors.black45, fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-
-        itemCount: documentosFiltrados.length, // Usamos el tamaño de la lista filtrada
-        itemBuilder: (context, index) {
-        var producto = documentosFiltrados[index]; // Usamos los productos filtrados
-
-
-          
-          // Convertimos a Map para evitar el error de campos faltantes
-          Map<String, dynamic> data = producto.data() as Map<String, dynamic>;
-
-          //Extraemos los valores de forma segura
-          String titulo = data.containsKey('nombre') ? (data['nombre'] ?? 'Sin título') : 'Sin título';
-          String autor = data.containsKey('autor_marca') ? (data['autor_marca'] ?? 'Sin autor') : 'Sin autor';
-          String precio = data.containsKey('valor') ? (data['valor'] ?? '0') : '0';
-          String foto = data.containsKey('image_url') ? (data['image_url'] ?? "") : "";
-
-          //Enviamos los datos a la tarjeta
-          return TarjetaProducto(
-            titulo: titulo,
-            autor: autor,
-            precio: precio,
-            foto: foto,
-          );
-        },
-      );*/
-    },
-  ),
-),
-            
-           const SizedBox(height: 100),
-          ]    
-        ),
-        
       ),
+    );
+  }
+
+  // Función de ayuda para los elementos del footer (ICONOS + TEXTO)
+  Widget _buildFooterItem(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          text,
+          style: const TextStyle(fontSize: 15, color: Colors.black87, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(width: 12),
+        Icon(icon, size: 22, color: const Color(0xFFE5853B)),
+      ],
     );
   }
 }

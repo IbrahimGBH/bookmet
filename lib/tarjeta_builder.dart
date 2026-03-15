@@ -76,9 +76,9 @@ class TarjetaBuilder extends StatelessWidget {
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: cantidadColumnas,
           crossAxisSpacing: 25,
-          mainAxisSpacing: 40,
+          mainAxisSpacing: 10,
           childAspectRatio: 0.7,
-          mainAxisExtent: tarjetaSize.toDouble(),
+          mainAxisExtent: 340,
         ),
         itemCount: flatList.length,
         itemBuilder: (context, index) {

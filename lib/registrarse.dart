@@ -13,15 +13,13 @@ class _PagRegistroState extends State<PagRegistro> {
   final TextEditingController apellidoController = TextEditingController();
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController carnetController = TextEditingController();
-  final TextEditingController carreraController = TextEditingController();
+  String? carreraSeleccionada;
   final TextEditingController whatsappController = TextEditingController();
   final TextEditingController claveController = TextEditingController();
   final TextEditingController correoController = TextEditingController();
 
-  Map<String, bool> seleccionados = {
-    "Ingeniería": false, "Psicología": false, "Idiomas": false, 
-    "Turismo": false, "Comunicación": false, "Derecho": false, "Economía": false, "Administración": false, "Contaduría": false,"Otros": false
-  };
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -159,55 +157,51 @@ class _PagRegistroState extends State<PagRegistro> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextFormField(
-                          controller: carreraController, 
-                          validator: (value) {
-                            if (value != null && value.isNotEmpty) {
-                              if (!RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(value)) {
-                                return 'Solo letras';
-                              }
-                            }
-                            return null;
-                          },
-                          decoration: const InputDecoration(
-                            label: Text.rich(TextSpan(children: [
-                              TextSpan(text: 'Carrera '),
-                              TextSpan(text: '*', style: TextStyle(color: Colors.red)),
-                            ])),
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
+                        StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance.collection('carreras').where('activo', isEqualTo: true).snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) return const Text("Error al cargar");
+                          if (!snapshot.hasData) return const LinearProgressIndicator();
+
+                          
+                          return DropdownButtonFormField<String>(
+                            value: carreraSeleccionada,
+                            decoration: const InputDecoration(
+                              label: Text.rich(TextSpan(children: [
+                                TextSpan(text: 'Carrera '),
+                                TextSpan(text: '*', style: TextStyle(color: Colors.red)),
+                              ])),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: snapshot.data!.docs.map((doc) {
+                              return DropdownMenuItem<String>(
+                                value: doc['nombre'], 
+                                child: Text(doc['nombre'], style: const TextStyle(fontSize: 15)),
+                              );
+                            }).toList(),
+                            onChanged: (nuevoValor) {
+                              setState(() {
+                                carreraSeleccionada = nuevoValor;
+                              });
+                            },
+                            validator: (value) => value == null ? 'Selecciona tu carrera' : null,
+                          );
+                        },
+                      ),
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: whatsappController, 
                           decoration: const InputDecoration(labelText: 'Link Whatsapp', border: OutlineInputBorder())),
                         const SizedBox(height: 20),
-                        const Text("Áreas de interés:", style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 10),
-                        Container(
-                          height: 200,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: ListView(
-                            padding: EdgeInsets.zero,
-                            children: [
-                              _crearCheck("Ingeniería"),
-                              _crearCheck("Psicología"),
-                              _crearCheck("Idiomas"),
-                              _crearCheck("Turismo"),
-                              _crearCheck("Comunicación"),
-                              _crearCheck("Derecho"),
-                              _crearCheck("Otros"),
-                            ],
-                          ),
-                        ),
+                      
+                          
                       ],
                     ),
                   ),
                 ],
               ),
+              
+                
               const SizedBox(height: 40),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
@@ -215,12 +209,33 @@ class _PagRegistroState extends State<PagRegistro> {
                   // Validamos los formatos antes de proceder
                   if (_formKey.currentState!.validate()) {
                     
-                    if( apellidoController.text.isEmpty || nombreController.text.isEmpty || carnetController.text.isEmpty || correoController.text.isEmpty || claveController.text.isEmpty || carreraController.text.isEmpty){
+                    if( apellidoController.text.isEmpty || nombreController.text.isEmpty || carnetController.text.isEmpty || correoController.text.isEmpty || claveController.text.isEmpty || carreraSeleccionada == null){
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text("Porfavor llenar los campos obligatorios"),
                           backgroundColor: Colors.red,
                         ),
+                      ); return;
+                    }
+                    String email = correoController.text.trim().toLowerCase();
+                  String carrera = carreraSeleccionada!.trim();
+
+                 bool esEstudiante = email.endsWith('@correo.unimet.edu.ve');
+    // Es profesor si es unimet pero NO tiene el ".correo"
+                    bool esProfesor = email.endsWith('@unimet.edu.ve') && !esEstudiante;
+
+                    // Validación Estudiante
+                    if (esEstudiante && carrera == "Personal Académico") {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Opción inválida para estudiantes, debe colocar su carrera"), backgroundColor: Colors.red),
+                      );
+                      return;
+                    }
+                    
+                    // Validación Profesor
+                    if (esProfesor && carrera != "Personal Académico") {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Como profesor, debe seleccionar 'Personal Académico'"), backgroundColor: Colors.red),
                       );
                       return;
                     }
@@ -234,14 +249,15 @@ class _PagRegistroState extends State<PagRegistro> {
                       await FirebaseFirestore.instance.collection('usuarios').doc(userCredential.user!.uid).set({
                         'nombre': nombreController.text,
                         'apellido': apellidoController.text,
-                        'carrera': carreraController.text,
-                        'intereses': seleccionados.entries.where((e) => e.value).map((e) => e.key).toList(),
+                        'carrera': carreraSeleccionada,
+                      
                         'correo':correoController.text,
                         'link_whatsapp':whatsappController.text,
                         'carnet_id':carnetController.text,
                         'correo_paypal': "",
                         'rating_puntos': 0,
                         'rating_votos': 0,
+                        'fecha_registro': FieldValue.serverTimestamp(),
                       });
 
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -262,24 +278,14 @@ class _PagRegistroState extends State<PagRegistro> {
                   }
                 }, 
                 child: const Text("Registrarse", style: TextStyle(color: Colors.white)),
-              ), 
-            ],
-          ),
-        ), 
-      ), 
-    ); 
-  }
-
-  Widget _crearCheck(String titulo) {
-    return CheckboxListTile(
-      title: Text(titulo, style: const TextStyle(fontSize: 14)),
-      value: seleccionados[titulo], 
-      onChanged: (bool? valor) {
-        setState(() {
-          seleccionados[titulo] = valor!;
-        });
-      },
-      controlAffinity: ListTileControlAffinity.leading,
+              ),
+                ],
+              ),
+            
+      ),
+      ),
     );
   }
 }
+            
+    

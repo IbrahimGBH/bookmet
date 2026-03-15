@@ -82,7 +82,10 @@ class TarjetaProducto extends StatelessWidget {
                   width: double.infinity,
                   color: Colors.grey[300],
                   child: foto != ""
-                      ? Image.network(foto, fit: BoxFit.fitHeight)
+                      ? Image.network(
+                        foto, 
+                        fit: BoxFit.cover,
+                        )
                       : const Icon(Icons.book, size: 50, color: Colors.grey),
                 ),
               ),
