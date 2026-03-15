@@ -288,39 +288,47 @@ class _CrearProductoState extends State<CrearProducto> {
     );
   }
 
-
+  // Lógica para enviar a Firebase 
+  // Lógica para enviar a Firebase 
   void _publicarProducto() async {
-  if (_formKey.currentState!.validate()) {
-    if (estadoSeleccionado == null || tipoTransaccionSeleccionado == null){
+    // 1. Validamos los campos de texto
+    if (_formKey.currentState!.validate()) {
+      
+      // 2. Validamos los Radio Buttons
+      if (estadoSeleccionado == null || tipoTransaccionSeleccionado == null){
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Por favor selecciona estado y tipo de transacción"), backgroundColor: Colors.red),
         );
         return;
       }
 
-     // 1. Inicia la ruedita
+      // 3. NUEVA VALIDACIÓN: Obligamos a que haya una foto
+      if (_webImageBytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Por favor selecciona una foto para publicar"), backgroundColor: Colors.red),
+        );
+        return; // Detenemos la función aquí si no hay foto
+      }
+
+      // Si pasa todas las validaciones, empezamos a subir
       setState(() {
         _isUploading = true;
       });
 
       try {
+        // Como ya sabemos que _webImageBytes NO es null, subimos la imagen directo
+        String? imageUrl = await _uploadImage();
         
-        // 2. Manejo de la imagen opcional
-        String? imageUrl;
-        
-        if (_webImageBytes != null) {
-          imageUrl = await _uploadImage();
-          if (imageUrl == null) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Error al subir la imagen."), backgroundColor: Colors.red),
-              );
-            }
-            return; 
+        if (imageUrl == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Error al subir la imagen."), backgroundColor: Colors.red),
+            );
           }
+          return; 
         }
-       
-        // 3. Guardamos en Firestore
+         
+        // Guardamos en Firebase
         await FirebaseFirestore.instance.collection('productos').add({
           'nombre': nombreController.text,
           'autor_marca': autorMarcaController.text,
@@ -331,10 +339,10 @@ class _CrearProductoState extends State<CrearProducto> {
           'descripcion': descripcionController.text,
           'vendedor_id': FirebaseAuth.instance.currentUser?.uid,
           'fecha': Timestamp.now(), 
-          'image_url': imageUrl ?? "",
+          'image_url': imageUrl, // Ahora siempre habrá una URL válida
           'disponibilidad': 'disponible',
         });
-        
+         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Producto publicado con éxito"), backgroundColor: Colors.green),
@@ -342,26 +350,23 @@ class _CrearProductoState extends State<CrearProducto> {
           Navigator.pop(context); 
         }
       } catch (e) {
-        print("Error al guardar en Firestore: $e");
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Error al publicar el producto"), backgroundColor: Colors.red),
           );
         }
       } finally {
-        // 4. Se detiene la ruedita (para que no se quede pegado mientras)
         if (mounted) {
           setState(() {
             _isUploading = false;
           });
         }
       }
-    } else if (nombreController.text.isEmpty || autorMarcaController.text.isEmpty || descripcionController.text.isEmpty || (tipoTransaccionSeleccionado != 'Gratis' && valorController.text.isEmpty || categoriaSeleccionada == null)) {
-         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Por favor completa todos los campos obligatorios"), backgroundColor: Colors.red),
-        );
-        return;
-      }
+    } else {
+      // Si falta algún campo de texto, mostramos este mensaje
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Por favor completa todos los campos obligatorios"), backgroundColor: Colors.red),
+      );
     }
   }
-//}
+}

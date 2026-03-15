@@ -314,20 +314,19 @@ class DetalleProducto extends StatelessWidget {
                       children: [
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.of(context).pop();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PantallaEditarProducto(
-                                  idProducto: idProducto,
-                                  tituloActual: titulo,
-                                  autorActual: autor,
-                                  precioActual: precio,
-                                  descripcionActual: descripcion,
-                                ),
-                              ),
-                            );
-                          },
+                            Navigator.of(context).pop(); 
+                            showDialog(
+                            context: context,
+                            builder: (context) => PantallaEditarProducto(
+                            idProducto: idProducto,
+                            tituloActual: titulo,
+                            autorActual: autor,
+                            precioActual: precio,
+                            descripcionActual: descripcion,
+                            imagenActual: imageUrl,
+                            ),
+                          );
+                        },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue[100],
                             foregroundColor: Colors.blue[900],
