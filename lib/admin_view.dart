@@ -82,30 +82,47 @@ class AdminView extends StatelessWidget {
                   
                   //Métricas
                   StreamBuilder<QuerySnapshot>(
-  stream: FirebaseFirestore.instance.collection('usuarios').snapshots(),
-  builder: (context, snapshot) {
-    
-    // Aquí hacemos la resta simple
-    String totalUsuarios = "...";
-    if (snapshot.hasData) {
-      // Tomamos el total y le restamos 1 (tu cuenta de admin)
-      int calculo = snapshot.data!.docs.length - 1;
-      totalUsuarios = calculo.toString();
-    }
-                    
-                    return Row(
-                      children: [
-                        
-                        metricCard("Usuarios Activos", totalUsuarios, const Color(0xFF3F85D5), context),
-                        const SizedBox(width: 20),
-                        
-                        metricCard("Intercambios del día", "0", const Color(0xFF59BBA3), context),
-                        const SizedBox(width: 20),
-                        metricCard("Intercambios pendientes", "0", const Color(0xFFE05555), context),
-                      ],
-                    );
-                  },
-                ),
+                    stream: FirebaseFirestore.instance.collection('usuarios').snapshots(),
+                    builder: (context, snapshot) {
+                      
+                      String totalUsuarios = "...";
+                      if (snapshot.hasData) {
+                        // Tomamos el total y le restamos 1 (tu cuenta de admin)
+                        int calculo = snapshot.data!.docs.length - 1;
+                        totalUsuarios = calculo.toString();
+                      }
+
+                      return StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('transacciones')
+                            .where('fecha_inicio', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)))
+                            .snapshots(),
+                        builder: (context, snapshotDia) {
+                          String intercambiosDia = snapshotDia.hasData ? snapshotDia.data!.docs.length.toString() : "...";
+
+                          return StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('transacciones')
+                                .where('estado', isEqualTo: 'pendiente')
+                                .snapshots(),
+                            builder: (context, snapshotPendientes) {
+                              String intercambiosPendientes = snapshotPendientes.hasData ? snapshotPendientes.data!.docs.length.toString() : "...";
+
+                              return Row(
+                                children: [
+                                  metricCard("Usuarios Activos", totalUsuarios, const Color(0xFF3F85D5), context),
+                                  const SizedBox(width: 20),
+                                  metricCard("Transacciones del día", intercambiosDia, const Color(0xFF59BBA3), context),
+                                  const SizedBox(width: 20),
+                                  metricCard("Transacciones pendientes", intercambiosPendientes, const Color(0xFFE05555), context),
+                                ],
+                              );
+                            }
+                          );
+                        }
+                      );
+                    },
+                  ),
                   
                   const SizedBox(height: 40),
                   

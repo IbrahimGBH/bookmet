@@ -1,6 +1,7 @@
 
 import 'package:bookmet/gestion_filtros.dart';
 import 'package:bookmet/gestion_usuarios.dart';
+import 'package:bookmet/pantalla_tdia.dart';
 import 'package:bookmet/pantalla_usuarios.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,12 @@ Widget metricCard(String title, String value, Color color, BuildContext context)
           Navigator.push(
             context, 
             MaterialPageRoute(builder: (context) => const PantallaUsuarios())
+          );
+        }
+        if (title == "Transacciones del día"||title =="Transacciones pendientes") {
+          Navigator.push(
+            context, 
+            MaterialPageRoute(builder: (context) => const PantallaTdia())
           );
         }
       },
@@ -43,8 +50,6 @@ Widget metricCard(String title, String value, Color color, BuildContext context)
               ),
             ),
             
-            // El icono de "más" solo lo mostramos si es clickeable
-            if (title == "Usuarios Activos")
               const Positioned(
                 top: 0,
                 right: 0,
