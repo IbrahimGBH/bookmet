@@ -137,15 +137,14 @@ class _InicioSesionState extends State<InicioSesion> {
                         SnackBar(content: Center(child: Text(esAdmin ? 'Bienvenido, Administrador' : '¡Bienvenido a Bookmet, $nombreUsuario!'))),
                       );
 
-                      Future.delayed(const Duration(seconds: 1), () {
-                        if (context.mounted) {
-                          if (esAdmin) {
-                            //debugPrint("Inicio Sesión Admin detectado");
-                          } else {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PantallaCatalogo()));
-                          }
+                      if (context.mounted) {
+                        if (esAdmin) {
+                          //debugPrint("Inicio Sesión Admin detectado");
+                        } else {
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
                         }
-                      });
+                      }
+
                     } catch (e) {
                       debugPrint("Error de Login: $e");
                       messenger.showSnackBar(const SnackBar(content: Text('Error al iniciar sesión o cuenta inhabilitada')));
