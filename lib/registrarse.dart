@@ -258,6 +258,8 @@ class _PagRegistroState extends State<PagRegistro> {
                         'rating_puntos': 0,
                         'rating_votos': 0,
                         'fecha_registro': FieldValue.serverTimestamp(),
+                        'activo': true, 
+                        'admin': false,
                       });
 
                       ScaffoldMessenger.of(context).showSnackBar(

@@ -7,10 +7,13 @@ class GestionUsuarios {
   static const Color naranjaMetro = Color(0xFFE5853B);
   
   static void mostrarDirectorio(BuildContext context, List<QueryDocumentSnapshot> usuarios) {
+    String filtroNombre = "";
     showDialog(
       context: context,
       builder: (context) {
-        return Dialog(
+          return StatefulBuilder(builder:(context,setState) {
+            return Dialog(
+    
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Container(
             width: MediaQuery.of(context).size.width * 0.4,
@@ -25,6 +28,30 @@ class GestionUsuarios {
                     IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                   ],
                 ),
+                Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: "Buscar por nombre...",
+                          prefixIcon: const Icon(Icons.search, color: naranjaMetro),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: const BorderSide(color: Colors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: const BorderSide(color: naranjaMetro),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            filtroNombre = value.toLowerCase();
+                          });
+                        },
+                      ),
+                    ),
                 const Divider(),
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
@@ -32,7 +59,17 @@ class GestionUsuarios {
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
-                      var docs = snapshot.data!.docs;
+                      var docs = snapshot.data!.docs.where((doc) {
+                            var data = doc.data() as Map<String, dynamic>;
+                            // No mostramos admins y filtramos por nombre/apellido
+                            bool esAdmin = data['admin'] == true;
+                            String nombreCompleto = "${data['nombre']} ${data['apellido']}".toLowerCase();
+                            return !esAdmin && nombreCompleto.contains(filtroNombre);
+                          }).toList();
+
+                          if (docs.isEmpty) {
+                            return const Center(child: Text("No se encontraron usuarios"));
+                          }
 
                       return ListView.builder(
                         itemCount: docs.length,
@@ -65,15 +102,17 @@ class GestionUsuarios {
                               onPressed: () => _opcionesUsuario(context, user),
                               child: const Text("Gestionar", style: TextStyle(color: Colors.white, fontSize: 11)),
                             ),
-                            );
+                              );
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );

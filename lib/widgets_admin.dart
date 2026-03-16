@@ -14,7 +14,7 @@ Widget metricCard(String title, String value, Color color, BuildContext context)
     child: GestureDetector(
       onTap: () {
         // Solo navegamos si es la tarjeta de Usuarios
-        if (title == "Usuarios Activos") {
+        if (title == "Total Usuarios") {
           Navigator.push(
             context, 
             MaterialPageRoute(builder: (context) => const PantallaUsuarios())
@@ -50,7 +50,7 @@ Widget metricCard(String title, String value, Color color, BuildContext context)
                 ],
               ),
             ),
-            
+
               const Positioned(
                 top: 0,
                 right: 0,
@@ -63,7 +63,7 @@ Widget metricCard(String title, String value, Color color, BuildContext context)
   );
 }
 
-  Widget sectionContainer({required String title, required Widget child}) {
+ Widget sectionContainer({required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
@@ -81,7 +81,8 @@ Widget metricCard(String title, String value, Color color, BuildContext context)
     );
   }
 
-  Widget filterManager(BuildContext context) {
+
+Widget filterManager(BuildContext context) {
     return Container(
       height: 400,
       padding: const EdgeInsets.all(20),
@@ -95,13 +96,13 @@ Widget metricCard(String title, String value, Color color, BuildContext context)
         children: [
           const Text("Carreras", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 15),
-          
+
 Expanded(child: 
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance.collection('carreras').snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const LinearProgressIndicator();
-              
+
               return ListView.builder(
                 itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context, index) {
@@ -114,7 +115,7 @@ Expanded(child:
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        
+
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +124,7 @@ Expanded(child:
                                 nombreCarrera,
                                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                               ),
-                              
+
                               StreamBuilder<QuerySnapshot>(
                                 stream: FirebaseFirestore.instance
                                     .collection('usuarios')
@@ -140,8 +141,8 @@ Expanded(child:
                             ],
                           ),
                         ),
-                        
-                        
+
+
                         Icon(
                           estaActiva ? Icons.check_circle : Icons.cancel,
                           color: estaActiva ? Colors.green : Colors.red,
@@ -160,13 +161,13 @@ Expanded(child:
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-  
+
                 showDialog(
                 context: context,
                 builder: (context) => const Dialog(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(20.0)),),
-                
+
                   child: GestionFiltros(),
                 ),
               );
@@ -179,7 +180,7 @@ Expanded(child:
     ),
   );
 }
-  // Busca tu función sidebarItem y reemplázala por esta:
+
 Widget sidebarItem(IconData icon, String label, bool isActive, BuildContext context) {
   return Container(
     padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
@@ -188,18 +189,18 @@ Widget sidebarItem(IconData icon, String label, bool isActive, BuildContext cont
       height: 50,
       child: TextButton(
         onPressed: () async {
-          if (label == "Detalle Usuarios") {
+          if (label == "Directorio Usuarios") {
             Navigator.pop(context); 
-            
-           
+
+
             final snapshot = await FirebaseFirestore.instance.collection('usuarios').get();
-            
-            
+
+
             GestionUsuarios.mostrarDirectorio(context, snapshot.docs);
           } 
-          else if (label == "Gestionar Filtros") {
+          else if (label == "Gestionar Carreras") {
             Navigator.pop(context); // Cierra el sidebar
-            
+
             // 3. Abrimos GestionFiltros envuelto en un Dialog para que no salga como pantalla nueva
             showDialog(
               context: context,

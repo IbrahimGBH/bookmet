@@ -24,7 +24,7 @@ class AdminView extends StatelessWidget {
        
         sidebarItem(Icons.dashboard, "DashBoard", false, context),
          sidebarItem(Icons.people, "Directorio Usuarios", false, context),
-        sidebarItem(Icons.filter_list, "Gestionar Filtros", false, context),
+        sidebarItem(Icons.filter_list, "Gestionar Carreras", false, context),
         sidebarItem(Icons.remove_red_eye, "Moderación", false, context),
       ],
     ),
@@ -89,7 +89,13 @@ class AdminView extends StatelessWidget {
                       String totalUsuarios = "...";
                       if (snapshot.hasData) {
                         // Tomamos el total y le restamos 1 (tu cuenta de admin)
-                        int calculo = snapshot.data!.docs.length - 1;
+                        int calculo = snapshot.data!.docs.where((doc) {
+                          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                          
+                          return data['admin'] != true;
+                        }).length;
+
+
                         totalUsuarios = calculo.toString();
                       }
 
@@ -111,7 +117,7 @@ class AdminView extends StatelessWidget {
 
                               return Row(
                                 children: [
-                                  metricCard("Usuarios Activos", totalUsuarios, const Color(0xFF3F85D5), context),
+                                  metricCard("Total Usuarios", totalUsuarios, const Color(0xFF3F85D5), context),
                                   const SizedBox(width: 20),
                                   metricCard("Transacciones del día", intercambiosDia, const Color(0xFF59BBA3), context),
                                   const SizedBox(width: 20),

@@ -43,7 +43,7 @@ class _PantallaUsuariosState extends State<PantallaUsuarios> {
     return leyenda;
   }
 
-  // --- UI PRINCIPAL ---
+
 
   @override
   Widget build(BuildContext context) {
@@ -56,12 +56,22 @@ class _PantallaUsuariosState extends State<PantallaUsuarios> {
         elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('usuarios').orderBy('fecha_registro', descending: true).snapshots(),
+        stream: FirebaseFirestore.instance.collection('usuarios').snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-
-          var docs = snapshot.data!.docs;
+          var docs = snapshot.data!.docs.where((doc) {
+             Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            return data['admin'] != true; // Excluimos a los administradores
+               }).toList();
+          // var docs = snapshot.data!.docs;
           int total = docs.length;
+          if (total == 0) {
+              return const Center(child: Text("No hay usuarios registrados"));
+        }
+
+        int activos = docs.where((d){Map<String, dynamic> data = d.data() as Map<String, dynamic>;
+           return data['activo'] == true;}).length; 
+            int inactivos = total - activos;
           int profesores = docs.where((d) => d['carrera'] == "Personal Académico").length;
           int alumnos = total - profesores;
 
@@ -73,33 +83,32 @@ class _PantallaUsuariosState extends State<PantallaUsuarios> {
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(25),
-            child: Column(
+           child: Column(
               children: [
-                // Indicador Total
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: const Color(0xFFE5853B), width: 2)
-                  ),
-                  child: Column(
-                    children: [
-                      const Text("TOTAL USUARIOS REGISTRADOS", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                      Text("$total", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFFE5853B))),
-                    ],
-                  ),
+                // Fila 1: Totales Principales
+                Row(
+                  children: [
+                    _cardMini("Total Usuarios", total.toString(), const Color(0xFF3F85D5)),
+                    const SizedBox(width: 10),
+                    _cardMini("Usuarios Activos", activos.toString(), const Color(0xFF59BBA3)),
+                    const SizedBox(width: 10),
+                    _cardMini("Usuarios Inactivos", inactivos.toString(), const Color(0xFFE05555)),
+                  
+                  
+                  ],
                 ),
-
+                
+                const SizedBox(height: 15),
+                // Fila 2: Roles
                 Row(
                   children: [
                     _cardMini("Alumnos", alumnos.toString(), const Color(0xFFE5853B)),
-                    const SizedBox(width: 15),
+                    const SizedBox(width: 10),
                     _cardMini("Profesores", profesores.toString(), const Color(0xFF3F85D5)),
                   ],
                 ),
+                
+                const SizedBox(height: 30),
                 
                 const SizedBox(height: 30),
                 
@@ -151,7 +160,7 @@ class _PantallaUsuariosState extends State<PantallaUsuarios> {
                 
                 const SizedBox(height: 30),
                 
-                // Cabecera de Registros Recientes
+  
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
@@ -185,7 +194,7 @@ class _PantallaUsuariosState extends State<PantallaUsuarios> {
                         ),
                         title: Text("${user['nombre']} ${user['apellido']}"),
                         subtitle: Text(user['carrera'] ?? ""),
-                        trailing: const Icon(Icons.chevron_right),
+                      
                       ),
                     );
                   },
@@ -198,7 +207,7 @@ class _PantallaUsuariosState extends State<PantallaUsuarios> {
     );
   }
 
-  // --- WIDGETS INTERNOS ---
+
 
   Widget _chartContainer({required String title, required Widget child}) {
     return Container(
@@ -265,4 +274,4 @@ class _PantallaUsuariosState extends State<PantallaUsuarios> {
       ),
     );
   }
-} // <--- FIN DE LA CLASE
+} 

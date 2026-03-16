@@ -68,6 +68,14 @@ String? carreraSeleccionada;
       ),
     );
   }
+bool esPersonalAcademico() {
+  // Obtenemos el correo del usuario actual (asumiendo que Auth tiene el email)
+  String email = Auth.instance.fAuth.currentUser?.email ?? "";
+  
+  // Si el correo NO tiene "correo." antes de "unimet", suele ser personal/profesor
+  // O puedes basarte en el valor actual de 'carreraSeleccionada'
+  return !email.contains("correo.unimet.edu.ve") || carreraSeleccionada == "Personal Académico";
+}
 
   AppBar _buildAppBar() {
     return AppBar(
@@ -146,64 +154,64 @@ String? carreraSeleccionada;
         const SizedBox(height: 8),
         
         FutureBuilder<String>(
-        future: career,
-        builder: (context, snapshotCareer) {
-          
-          if (snapshotCareer.connectionState == ConnectionState.waiting) {
-            return const LinearProgressIndicator();
-          }
+  future: career,
+  builder: (context, snapshotCareer) {
+    if (snapshotCareer.connectionState == ConnectionState.waiting) {
+      return const LinearProgressIndicator();
+    }
 
-          return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('carreras').snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const LinearProgressIndicator();
+    
+    if (snapshotCareer.hasData && carreraSeleccionada == null) {
+      carreraSeleccionada = snapshotCareer.data;
+    }
 
-              var docs = snapshot.data!.docs;
-              
-             
-              String? carreraDelUser = snapshotCareer.data?.trim();
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('carreras').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const LinearProgressIndicator();
 
-            
-              if (carreraSeleccionada == null && carreraDelUser != null) {
-               
-                bool existe = docs.any((d) => d['nombre'].toString().trim() == carreraDelUser);
-                if (existe) {
-                  carreraSeleccionada = carreraDelUser;
-                }
-              }
+        // para que salgan solo las activas 
+        final carrerasList = snapshot.data!.docs.where((doc) {
+          bool activa = doc['activo'] == true;
+          String nombre = doc['nombre'];
+          if (!activa) return false;
+          if (!esPersonalAcademico() && nombre == "Personal Académico") return false;
+          return true;
+        }).toList();
 
-              final bool valorEsValido = docs.any((d) => d['nombre'] == carreraSeleccionada);
-              final String? valorFinal = valorEsValido ? carreraSeleccionada : null;
+        //aqui te obliga que si el admin quito una carrera aparezca null y no el usuairo no la pueda volver a presionar
+        bool existeEnLista = carrerasList.any((d) => d['nombre'] == carreraSeleccionada);
+        String? valorFinal = existeEnLista ? carreraSeleccionada : null;
 
-              return DropdownButtonFormField<String>(
-                value: valorFinal,
-                isExpanded: true,
-                hint: const Text("Selecciona tu carrera"),
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
-                items: docs.map((doc) {
-                  bool activa = doc['activo'] == true;
-                  String nombre = doc['nombre'];
-                  return DropdownMenuItem<String>(
-                    value: nombre,
-                    child: Text(
-                      activa ? nombre : "$nombre (Inactiva)",
-                      style: TextStyle(color: activa ? Colors.black : Colors.red),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (nuevoValor) {
+        return DropdownButtonFormField<String>(
+          value: valorFinal,
+          isExpanded: true,
+          hint: const Text("Selecciona tu carrera"),
+          onChanged: esPersonalAcademico()
+              ? null
+              : (nuevoValor) {
                   setState(() {
                     carreraSeleccionada = nuevoValor;
                   });
                 },
-              );
-            },
-          );
-        },
-      ),
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            filled: esPersonalAcademico(),
+            fillColor: esPersonalAcademico() ? Colors.grey[200] : Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+          items: carrerasList.map((doc) {
+            String nombre = doc['nombre'];
+            return DropdownMenuItem<String>(
+              value: nombre,
+              child: Text(nombre, style: const TextStyle(color: Colors.black)),
+            );
+          }).toList(),
+        );
+      },
+    );
+  },
+),
               const SizedBox(height: 20),
       _buildTextField(
   "Link Whatsapp", 

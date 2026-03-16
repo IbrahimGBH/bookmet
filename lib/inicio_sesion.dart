@@ -87,139 +87,73 @@ class _InicioSesionState extends State<InicioSesion> {
                 width: 307,
                 height: 60,
                 child: ElevatedButton(
-                  onPressed: () async {
+                  style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE5853B), // El naranja original
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  elevation: 2,
+                ),
+                    onPressed: () async {
                     final email = controllerUser.text.trim();
                     final password = controllerPassword.text;
                     final messenger = ScaffoldMessenger.of(context);
+
                     if (email.isEmpty || password.isEmpty) {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Por favor complete todos los campos'),
-                        ),
-                      );
+                      messenger.showSnackBar(const SnackBar(content: Text('Por favor complete todos los campos')));
                       return;
                     }
 
-/* // ADMIN CABLEADO 
-                    if (email == 'admin@unimet.edu.ve' && password == 'Admin123') {
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Acceso de Administrador concedido'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                      // Es el admin, va directo al Dashboard
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => AdminView()),
-                      );
-                      return; 
-                    }
-                    // Find del cableado del admin
-*/
+                    messenger.showSnackBar(const SnackBar(content: Text('Iniciando sesión...'), duration: Duration(seconds: 2)));
 
-                    messenger.showSnackBar(
-                      const SnackBar(
-                        content: Text('Iniciando sesión...'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
                     try {
-                      final cred = await Auth.instance.signInWithEmail(
-                        context,
-                        email,
-                        password,
-                      );
+                      final cred = await Auth.instance.signInWithEmail(context, email, password);
                       if (cred == null) {
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('No se ha podido iniciar sesión'),
-                          ),
-                        );
-                      } else {
-      
-      String uid = cred.user!.uid;
+                        messenger.showSnackBar(const SnackBar(content: Text('No se ha podido iniciar sesión')));
+                        return;
+                      }
 
-      // Aqui consulta si la persona esta activa. 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(uid)
-          .get();
+                      String uid = cred.user!.uid;
+                      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('usuarios').doc(uid).get();
 
-      if (userDoc.exists) {
-        Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
-        bool estaActivo = data['activo'] ?? true; 
+                      bool estaActivo = true;
+                      bool esAdmin = false;
+                      String nombreUsuario = "Usuario";
 
-        if (!estaActivo) {
-      
-          await Auth.instance.fAuth.signOut(); 
-          messenger.showSnackBar(
-            const SnackBar(
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
-              content: Text(
-                'El usuario no se encuentra activo. Por favor, póngase en contacto con el soporte técnico.',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          );
-          return; 
-        }
-      }
+                      if (userDoc.exists) {
+                        Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
+                        estaActivo = data['activo'] ?? true;
+                        esAdmin = data['admin'] ?? false;
+                        nombreUsuario = data['nombre'] ?? "Admin";
+                      }
 
+                      if (!estaActivo) {
+                        await Auth.instance.fAuth.signOut();
+                        messenger.showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Usuario inactivo. Contacte a soporte.')));
+                        return;
+                      }
 
-      String nombre = await Auth.instance.getNombre(uid);
-      bool esAdmin = await Auth.instance.isAdmin(uid);
+                      messenger.showSnackBar(
+                        SnackBar(content: Center(child: Text(esAdmin ? 'Bienvenido, Administrador' : '¡Bienvenido a Bookmet, $nombreUsuario!'))),
+                      );
 
-      messenger.showSnackBar(
-        SnackBar(
-          content: Center(
-            child: esAdmin == false 
-                ? Text('¡Bienvenido a Bookmet, $nombre!') 
-                : const Text('Bienvenido, admin'),
-          ),
-        ),
-      );
-
-      Future.delayed(const Duration(seconds: 1), () {
-        if (context.mounted) {
-          if (esAdmin) {
-            // Si es admin va a su vista 
-            
-          } else {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const PantallaCatalogo()),
-            );
-          }
-        }
-      });
-    }
-  } catch (e) {
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Error al iniciar sesión o cuenta inhabilitada')),
-    );
-  }
-},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE5853B),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: const Text(
-                    'Iniciar sesión',
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                      Future.delayed(const Duration(seconds: 1), () {
+                        if (context.mounted) {
+                          if (esAdmin) {
+                            //debugPrint("Inicio Sesión Admin detectado");
+                          } else {
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PantallaCatalogo()));
+                          }
+                        }
+                      });
+                    } catch (e) {
+                      debugPrint("Error de Login: $e");
+                      messenger.showSnackBar(const SnackBar(content: Text('Error al iniciar sesión o cuenta inhabilitada')));
+                    }
+                  },
+                  child: const Text('Iniciar sesión', style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.w500)),
                 ),
               ),
-
-              const SizedBox(height: 30),
 
               const SizedBox(height: 100),
               const Divider(color: Color(0xFF666666), thickness: 1),
