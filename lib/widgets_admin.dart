@@ -4,6 +4,8 @@ import 'package:bookmet/gestion_usuarios.dart';
 import 'package:bookmet/pantalla_tdia.dart';
 import 'package:bookmet/pantalla_mod_publicaciones.dart';
 import 'package:bookmet/pantalla_usuarios.dart';
+import 'package:bookmet/tarjeta_builder.dart';
+import 'package:bookmet/tarjeta_producto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -65,7 +67,12 @@ Widget metricCard(String title, String value, Color color, BuildContext context)
 
  Widget sectionContainer({required String title, required Widget child}) {
     return Container(
-      padding: const EdgeInsets.all(25),
+      padding: EdgeInsets.only(
+      top: title.isEmpty ? 5 : 25, 
+      left: 25, 
+      right: 25, 
+      bottom: 25
+    ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(25),
@@ -201,7 +208,7 @@ Widget sidebarItem(IconData icon, String label, bool isActive, BuildContext cont
           else if (label == "Gestionar Carreras") {
             Navigator.pop(context); // Cierra el sidebar
 
-            // 3. Abrimos GestionFiltros envuelto en un Dialog para que no salga como pantalla nueva
+            
             showDialog(
               context: context,
               builder: (context) => const Dialog(
@@ -214,7 +221,7 @@ Widget sidebarItem(IconData icon, String label, bool isActive, BuildContext cont
           }
           else if (label == "DashBoard") {
             Navigator.pop(context);
-            // Aquí podrías añadir un Navigator.push si no estás ya en AdminView
+           
           }
           else if (label == "Moderación") {
             Navigator.pop(context);
@@ -236,5 +243,36 @@ Widget sidebarItem(IconData icon, String label, bool isActive, BuildContext cont
         ),
       ),
     ),
+  );
+}
+
+Widget ultimasPublicacionesModeracion() {
+  return StreamBuilder<QuerySnapshot>(
+    
+    stream: FirebaseFirestore.instance
+        .collection('productos')
+        .orderBy('fecha', descending: true)
+        .limit(3) 
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: LinearProgressIndicator());
+      }
+
+      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        return const Center(child: Text("No hay publicaciones recientes."));
+      }
+
+      
+      var docs = snapshot.data!.docs.cast<QueryDocumentSnapshot<Map<String, dynamic>>>();
+
+      return TarjetaBuilder(
+        filtro: [docs],
+        cantidadColumnas: 3, 
+        tarjetaSize: 400,    
+        smallVersion: true,  
+        isScrollable: false, 
+      );
+    },
   );
 }

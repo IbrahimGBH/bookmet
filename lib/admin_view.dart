@@ -163,23 +163,48 @@ class AdminView extends StatelessWidget {
                       
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
                   
                   //Moderación
-                  sectionContainer(
-                    title: "Moderación de Publicaciones",
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton(
-                        onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => const PantallaModPublicaciones()));},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3F85D5),
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                sectionContainer(
+                  title: "", 
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min, 
+                    children: [
+                      
+                      Transform.translate(
+                        offset: const Offset(0, -15), 
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Moderación de Publicaciones",
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(builder: (context) => const PantallaModPublicaciones())
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3F85D5),
+                                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              child: const Text("Visualizar", style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
                         ),
-                        child: const Text("Visualizar", style: TextStyle(color: Colors.white)),
                       ),
-                    ),
+                      
+                      const SizedBox(height: 0), 
+
+                      ultimasPublicacionesModeracion(),
+                    ],
                   ),
+                ),
                 ],
               ),
             ),
