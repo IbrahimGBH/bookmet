@@ -1,5 +1,4 @@
 import 'package:bookmet/home_screen.dart';
-import 'dart:async';
 import 'package:bookmet/tarjeta_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/crear_producto.dart';
@@ -9,7 +8,7 @@ import 'package:bookmet/auth.dart';
 import 'package:bookmet/mi_perfil.dart';
 import 'package:bookmet/dialogo_favoritos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:bookmet/dialogo_transaccion.dart';
+import 'package:bookmet/notificacion.dart';
 
 class PantallaCatalogo extends StatefulWidget {
   const PantallaCatalogo({super.key});
@@ -34,81 +33,9 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _verificarWhatsApp(); 
-      _escucharNuevasSolicitudes();
+      Notificacion.instance.escucharNuevasSolicitudes(context);
     }); 
   } 
-
-  static StreamSubscription? _solicitudesSubscription;
-  static final Set<String> _notificacionesMostradas = {};
-
-  void _escucharNuevasSolicitudes() {
-    _solicitudesSubscription?.cancel();
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final query = FirebaseFirestore.instance
-        .collection('transacciones')
-        .where('vendedor_id', isEqualTo: user.uid)
-        .where('estado', isEqualTo: 'pendiente')
-        .where('aceptada', isEqualTo: false);
-
-    _solicitudesSubscription = query.snapshots().listen((snapshot) {
-      for (var change in snapshot.docChanges) {
-        final docId = change.doc.id;
-        if (change.type == DocumentChangeType.added) {
-          if (!_notificacionesMostradas.contains(docId)) {
-            _mostrarDialogoSolicitud(change.doc);
-            _notificacionesMostradas.add(docId);
-          }
-        } else if (change.type == DocumentChangeType.removed) {
-          _notificacionesMostradas.remove(docId);
-        }
-      }
-    });
-  }
-
-  Future<void> _mostrarDialogoSolicitud(DocumentSnapshot txDoc) async {
-    if (!mounted) return;
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final datosTx = txDoc.data() as Map<String, dynamic>;
-    final String idProducto = datosTx['id_producto'];
-
-    final prodDoc = await FirebaseFirestore.instance.collection('productos').doc(idProducto).get();
-    final String nombreProducto = prodDoc.exists ? (prodDoc.data()?['nombre'] ?? 'un artículo') : 'un artículo';
-    final String compradorId = datosTx['comprador_id'];
-
-    final nombreComprador = await Auth.instance.getNombre(compradorId);
-    final apellidoComprador = await Auth.instance.getApellido(compradorId);
-    final String nombreCompleto = '$nombreComprador $apellidoComprador'.trim();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('¡Nueva Solicitud! 🎉'),
-          content: Text('${nombreCompleto.isNotEmpty ? nombreCompleto : 'Un usuario'} ha solicitado tu producto "$nombreProducto".\n\n¿Deseas ver la solicitud?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Luego', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              onPressed: () {
-                Navigator.pop(context);
-                showDialog(context: context, builder: (context) => TDialog(idProducto: idProducto, vendedorId: user.uid));
-              },
-              child: const Text('Ver solicitud', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Future<void> _verificarWhatsApp() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -351,6 +278,35 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
                 );
               },
               child: const Text('Favoritos', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            ),
+            // --- BOTÓN DE NOTIFICACIONES ---
+            StreamBuilder<QuerySnapshot>(
+              // Usamos el nuevo stream de la clase Notificacion
+              stream: Notificacion.instance.getNuevasNotificacionesStream(),
+              builder: (context, snapshot) {
+                bool tieneNoLeidas = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined, color: Colors.black, size: 28),
+                      onPressed: () {
+                        // Usamos el nuevo método para mostrar el historial
+                        Notificacion.instance.mostrarHistorial(context);
+                      },
+                    ),
+                    if (tieneNoLeidas)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          height: 8, 
+                          width: 8, 
+                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+                      ),
+                  ],
+                );
+              },
             ),
           ],
           const SizedBox(width: 15),

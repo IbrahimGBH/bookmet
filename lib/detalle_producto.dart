@@ -1,4 +1,5 @@
 import 'package:bookmet/auth.dart';
+import 'package:bookmet/notificacion.dart';
 import 'package:bookmet/dialogo_transaccion.dart';
 import 'package:bookmet/dialogo_vendedor.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +57,19 @@ class DetalleProducto extends StatelessWidget {
                   }
 
                   await FirebaseFirestore.instance.collection('productos').doc(idProducto).delete();
+
+                  final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+                  final bool isAdmin = await Auth.instance.isAdmin(currentUserId ?? "");
+
+                  // Si un admin borra una publicación, notifica al vendedor.
+                  if (isAdmin && currentUserId != vendedorId) {
+                    await Notificacion.instance.crearNotificacion(
+                      userId: vendedorId,
+                      titulo: 'Publicación eliminada por moderador',
+                      cuerpo: 'Tu publicación "$titulo" fue eliminada por no cumplir con las normas.',
+                      tipo: 'moderacion_eliminada',
+                    );
+                  }
                   
                   if (!ctx.mounted) return;
                   Navigator.of(ctx).pop(); 

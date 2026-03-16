@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:bookmet/auth.dart';
+import 'package:bookmet/notificacion.dart';
 
 class Transaccion {
   Transaccion._internal();
@@ -81,6 +82,22 @@ class Transaccion {
                 'tipo': tipo,
                 'estado': 'pendiente',
               });
+
+          String nombreComprador = await Auth.instance.getNombre(Auth.instance.getUid());
+          String apellidoComprador = await Auth.instance.getApellido(Auth.instance.getUid());
+          String nombreProducto = producto['nombre'] ?? 'un artículo';
+          
+          String tituloNotif = (tipo == 'Venta') ? '¡Producto Vendido!' : 'Nueva Solicitud';
+          String cuerpoNotif = (tipo == 'Venta') 
+              ? '$nombreComprador $apellidoComprador ha comprado tu producto "$nombreProducto".'
+              : '$nombreComprador $apellidoComprador ha enviado una solicitud de $tipo por "$nombreProducto".';
+
+          await Notificacion.instance.crearNotificacion(
+            userId: vendedorId,
+            titulo: tituloNotif,
+            cuerpo: cuerpoNotif,
+            tipo: 'solicitud_transaccion',
+          );
         } catch (e) {
           //manejar error
         }
@@ -113,7 +130,6 @@ class Transaccion {
             .doc(idTransaccion)
             .delete();
 
-        // CAMBIO, Eliminamos el producto de Firestore por completo
         await ffStore.collection('productos').doc(idProducto).delete();
 
         await ffStore.collection('transacciones').doc(idTransaccion).update({
@@ -190,10 +206,24 @@ class Transaccion {
         await ffStore.collection('productos').doc(idProducto).update({
           'disponibilidad': 'disponible',
         });
+          
+        if(Auth.instance.getUid() == compradorId) {  
+          String nombreComprador = await Auth.instance.getNombre(Auth.instance.getUid());
+          String apellidoComprador = await Auth.instance.getApellido(Auth.instance.getUid());
+          
+          String tituloNotif = 'Solicitud cancelada';
+          String cuerpoNotif = '$nombreComprador $apellidoComprador ha cancelado su solicitud.';
+
+          await Notificacion.instance.crearNotificacion(
+            userId: vendedorId,
+            titulo: tituloNotif,
+            cuerpo: cuerpoNotif,
+            tipo: 'solicitud_transaccion',
+          );
+        }
       }
 
       await ffStore.collection('transacciones').doc(idTransaccion).delete();
-      //Aquí se debería añadir lógica para notificar tanto al comprador y el vendedor sobre la eliminación de la transacción
     } catch (e) {
       //manejar error
     }
