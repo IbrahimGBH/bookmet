@@ -24,7 +24,7 @@ class _MiPerfilState extends State<MiPerfil> {
   Widget build(BuildContext context) {
     return Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
         child: Container(
           width: widget.dialogWidth > 581 ? 581 : widget.dialogWidth ,
           height: widget.dialogHeight,
@@ -48,8 +48,13 @@ class _MiPerfilState extends State<MiPerfil> {
                     
                     const SizedBox(height: 6),
                     
-                    // Solicitudes
+                    // Solicitudes que YO envié
                     _buildTarjetaSolicitud(context),
+
+                    const SizedBox(height: 6),
+
+                    // Solicitudes que OTROS me enviaron a mí
+                    _buildTarjetaVentasPendientes(context),
                     
                     const SizedBox(height: 30),
                     _buildBotonesAccion(context),
@@ -159,7 +164,7 @@ Widget _buildBotonesAccion(BuildContext context) {
     children: [
       Expanded(
         child: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE5853B), shape: StadiumBorder()),
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE5853B), shape: const StadiumBorder()),
           onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => EditarPerfil()));},
           child: const Text("Editar Perfil", style: TextStyle(color: Colors.white)),
         ),
@@ -167,7 +172,7 @@ Widget _buildBotonesAccion(BuildContext context) {
       const SizedBox(width: 10),
       Expanded(
         child: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFDAB9), shape: StadiumBorder()),
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFDAB9), shape: const StadiumBorder()),
           onPressed: () {Auth.instance.signOut(context);},
           child: const Text("Cerrar sesión", style: TextStyle(color: Color(0xFFE5853B))),
         ),
@@ -200,7 +205,7 @@ Widget _buildBotonCerrar(BuildContext context) {
     ),
   );
 }
-// aqui cambie un pelo el codigo para que salga el boton de ver mas y todas las solicitudes pendientes.
+
 Widget _buildTarjetaSolicitud(BuildContext context) {
   return StreamBuilder<QuerySnapshot>(
     stream: FirebaseFirestore.instance
@@ -211,7 +216,6 @@ Widget _buildTarjetaSolicitud(BuildContext context) {
     builder: (context, snapshot) {
       if (!snapshot.hasData) return const CircularProgressIndicator();
       
-
       var transacciones = snapshot.data!.docs.cast<QueryDocumentSnapshot<Map<String, dynamic>>>();
       
       if (transacciones.isEmpty) {
@@ -238,9 +242,8 @@ Widget _buildTarjetaSolicitud(BuildContext context) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               _buildSeccionTitulo("Mis solicitudes:", alPresionarVerMas: () {
-                _mostrarTodo(context, "Todas mis solicitudes", transacciones, esSolicitud: true);
+                _mostrarTodo(context, "Todas mis solicitudes", transacciones, esSolicitud: true, soyVendedor: false);
               }),
               TarjetaBuilder(
                 filtro: [limitados],
@@ -255,11 +258,38 @@ Widget _buildTarjetaSolicitud(BuildContext context) {
     },
   );
 }
-void _mostrarTodo(BuildContext context, String titulo, List<QueryDocumentSnapshot<Map<String, dynamic>>> listaCompleta, {bool esSolicitud = false}) {
+
+Widget _buildTarjetaVentasPendientes(BuildContext context) {
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('transacciones')
+        .where('vendedor_id', isEqualTo: Auth.instance.getUid())
+        .where('estado', isEqualTo: 'pendiente')
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) return const SizedBox();
+      
+      var ventas = snapshot.data!.docs.cast<QueryDocumentSnapshot<Map<String, dynamic>>>();
+      
+      if (ventas.isEmpty) return const SizedBox();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSeccionTitulo("Solicitudes recibidas:", alPresionarVerMas: () {
+            _mostrarTodo(context, "Solicitudes de compra", ventas, esSolicitud: true, soyVendedor: true);
+          }),
+          const Text("¡Alumnos interesados en tus libros!", style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+        ],
+      );
+    },
+  );
+}
+
+void _mostrarTodo(BuildContext context, String titulo, List<QueryDocumentSnapshot<Map<String, dynamic>>> listaCompleta, {bool esSolicitud = false, bool soyVendedor = false}) {
   showDialog(
     context: context,
     builder: (context) {
-      // Creamos un controlador explícito para vincular Scrollbar y la lista
       final ScrollController scrollController = ScrollController();
       return Dialog(
         backgroundColor: Colors.white,
@@ -287,19 +317,16 @@ void _mostrarTodo(BuildContext context, String titulo, List<QueryDocumentSnapsho
               const Divider(),
               Expanded(
                 child: Scrollbar(
-                  // Asignamos el controlador al Scrollbar
                   controller: scrollController,
-                  thumbVisibility: true, // Hace visible la barra siempre
+                  thumbVisibility: true, 
                   child: esSolicitud
                       ? ListView.builder(
-                          // Asignamos EL MISMO controlador al ListView
                           controller: scrollController,
                           itemCount: listaCompleta.length,
                           itemBuilder: (context, index) =>
-                              _buildFilaAccionSolicitud(listaCompleta[index]),
+                              _buildFilaAccionSolicitud(listaCompleta[index], soyVendedor: soyVendedor),
                         )
                       : TarjetaBuilder(
-                          // Si es publicacion, seguimos con tu grid
                           scrollController: scrollController,
                           isScrollable: true,
                           filtro: [listaCompleta],
@@ -316,7 +343,8 @@ void _mostrarTodo(BuildContext context, String titulo, List<QueryDocumentSnapsho
     },
   );
 }
-Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> transDoc) {
+
+Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> transDoc, {bool soyVendedor = false}) {
   final transData = transDoc.data();
   final String idProducto = transData['id_producto'];
   final String idTransaccion = transDoc.id;
@@ -333,12 +361,11 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(50), 
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+          borderRadius: BorderRadius.circular(15), 
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
-         
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
@@ -350,30 +377,51 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
               ),
             ),
             const SizedBox(width: 12),
-            
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "EN PROGRESO - ${productoData['nombre']}",
-                    style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                    productoData['nombre'] ?? 'Producto',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _botonAccion("Aceptar solicitud", const Color(0xFF6ABF97), () {
-                        Transaccion.instance.aceptarSolicitud(idTransaccion);
-                      }),
-                      const SizedBox(width: 8),
-                      _botonAccion("Rechazar solicitud", const Color(0xFFB54D43), () {
-                        Transaccion.instance.eliminarTransaccion(idTransaccion);
-                      }),
-                    ],
-                  ),
+                  const SizedBox(height: 5),
+                  if (soyVendedor)
+                    Row(
+                      children: [
+                        _botonAccion("Aceptar", const Color(0xFF6ABF97), () async {
+                          // ACTUALIZAMOS EN FIREBASE PARA QUE DESAPAREZCA DE LA LISTA
+                          await FirebaseFirestore.instance
+                              .collection('transacciones')
+                              .doc(idTransaccion)
+                              .update({'estado': 'aceptado'});
+                          // LLAMAMOS TU LOGICA DE NOTIFICACION
+                          await Transaccion.instance.aceptarSolicitud(idTransaccion);
+                          if (context.mounted) Navigator.pop(context);
+                        }),
+                        const SizedBox(width: 5),
+                        _botonAccion("Rechazar", const Color(0xFFB54D43), () async {
+                          await Transaccion.instance.eliminarTransaccion(idTransaccion);
+                          if (context.mounted) Navigator.pop(context);
+                        }),
+                      ],
+                    )
+                  else
+                    const Text(
+                      "Estado: Esperando respuesta",
+                      style: TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w500),
+                    ),
                 ],
               ),
             ),
+            if (!soyVendedor)
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: () async {
+                  await Transaccion.instance.eliminarTransaccion(idTransaccion);
+                  if (context.mounted) Navigator.pop(context);
+                },
+              ),
           ],
         ),
       );
@@ -382,20 +430,18 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
 }
 
 Widget _botonAccion(String texto, Color color, VoidCallback onTap) {
-  return Expanded(
-    child: InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          texto,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-        ),
+  return InkWell(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        texto,
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     ),
   );
