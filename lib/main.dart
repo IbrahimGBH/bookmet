@@ -34,31 +34,7 @@ class BookmetApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-
-      home: StreamBuilder<firebase_auth.User?>(
-        stream: firebase_auth.FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-
-          if (snapshot.hasData) {
-            final String? email = FirebaseAuth.instance.currentUser?.email;
-          if (email == 'prueba@correo.unimet.edu.ve') {
-              return const AdminView();
-            } else {
-              return HomeScreen(); // Se mantiene el HomeScreen para los usuarios normales
-            }
-          }
-
-          return const InicioSesion();
-        },
-      ),
+      home: HomeScreen(),
     );
   }
 }
