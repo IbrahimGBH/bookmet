@@ -101,7 +101,7 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
     super.dispose();
   }
 
-  void _mostrarDialogoFiltros() {
+void _mostrarDialogoFiltros() {
     List<String> tempCategorias = List.from(categoriasSeleccionadas);
     List<String> tempEstados = List.from(estadosSeleccionados);
     List<String> tempTransacciones = List.from(transaccionesSeleccionadas);
@@ -129,42 +129,71 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
                         ],
                       ),
                       const SizedBox(height: 20),
+
                       const Text("Tipo de Material", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Wrap(
-                        spacing: 15,
-                        children: ['Libros', 'Guías', 'Material Lab', 'Equipos', 'Otros'].map((String opcion) {
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Checkbox(
-                                activeColor: const Color(0xFFC0834A),
-                                value: tempCategorias.contains(opcion),
-                                onChanged: (bool? value) { setStateDialog(() { if (value == true) { tempCategorias.add(opcion); } else { tempCategorias.remove(opcion); } }); },
-                              ),
-                              Text(opcion),
-                            ],
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance.collection('categorias').snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) return const CircularProgressIndicator();
+                          
+                          return Wrap(
+                            spacing: 15,
+                            children: snapshot.data!.docs.map((doc) {
+                              String opcion = doc['nombre'];
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Checkbox(
+                                    activeColor: const Color(0xFFC0834A),
+                                    value: tempCategorias.contains(opcion),
+                                    onChanged: (bool? value) { 
+                                      setStateDialog(() { 
+                                        if (value == true) { tempCategorias.add(opcion); } else { tempCategorias.remove(opcion); } 
+                                      }); 
+                                    },
+                                  ),
+                                  Text(opcion),
+                                ],
+                              );
+                            }).toList(),
                           );
-                        }).toList(),
+                        },
                       ),
+
                       const SizedBox(height: 20),
+
                       const Text("Estado de Conservación", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Wrap(
-                        spacing: 15,
-                        children: ['Nuevo', 'Como nuevo', 'Desgastado'].map((String opcion) {
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Checkbox(
-                                activeColor: const Color(0xFFC0834A),
-                                value: tempEstados.contains(opcion),
-                                onChanged: (bool? value) { setStateDialog(() { if (value == true) { tempEstados.add(opcion); } else { tempEstados.remove(opcion); } }); },
-                              ),
-                              Text(opcion),
-                            ],
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance.collection('condiciones').snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) return const CircularProgressIndicator();
+
+                          return Wrap(
+                            spacing: 15,
+                            children: snapshot.data!.docs.map((doc) {
+                              String opcion = doc['nombre'];
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Checkbox(
+                                    activeColor: const Color(0xFFC0834A),
+                                    value: tempEstados.contains(opcion),
+                                    onChanged: (bool? value) { 
+                                      setStateDialog(() { 
+                                        if (value == true) { tempEstados.add(opcion); } else { tempEstados.remove(opcion); } 
+                                      }); 
+                                    },
+                                  ),
+                                  Text(opcion),
+                                ],
+                              );
+                            }).toList(),
                           );
-                        }).toList(),
+                        },
                       ),
+
                       const SizedBox(height: 20),
+
                       const Text("Tipo de Transacción", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Wrap(
                         spacing: 15,
@@ -183,6 +212,7 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
                         }).toList(),
                       ),
                       const SizedBox(height: 30),
+
                       Center(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE5853B), padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)),
