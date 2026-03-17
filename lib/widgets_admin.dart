@@ -8,6 +8,7 @@ import 'package:bookmet/tarjeta_builder.dart';
 import 'package:bookmet/tarjeta_producto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:bookmet/pantalla_gestionar_filtros.dart';
 
 
 
@@ -217,6 +218,14 @@ Widget sidebarItem(IconData icon, String label, bool isActive, BuildContext cont
                 ),
                 child: GestionFiltros(), // Tu widget de filtros
               ),
+            );
+          }
+          else if (label == "Gestionar Filtros") {
+            Navigator.pop(context); // Cierra el sidebar
+            Navigator.push(
+              context, 
+              // Asegúrate de poner aquí el nombre exacto de la pantalla/clase que creaste para los filtros
+              MaterialPageRoute(builder: (context) => const PantallaGestionarFiltros()) 
             );
           }
           else if (label == "DashBoard") {

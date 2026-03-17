@@ -23,8 +23,9 @@ class AdminView extends StatelessWidget {
       children: [
        
         sidebarItem(Icons.dashboard, "DashBoard", false, context),
-         sidebarItem(Icons.people, "Directorio Usuarios", false, context),
+        sidebarItem(Icons.people, "Directorio Usuarios", false, context),
         sidebarItem(Icons.filter_list, "Gestionar Carreras", false, context),
+        sidebarItem(Icons.category, "Gestionar Filtros", false, context), 
         sidebarItem(Icons.remove_red_eye, "Moderación", false, context),
       ],
     ),

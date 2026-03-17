@@ -113,6 +113,10 @@ class _InicioSesionState extends State<InicioSesion> {
                         return;
                       }
 
+                      if (email == 'prueba@correo.unimet.edu.ve') {
+                        return; 
+                      }
+
                       String uid = cred.user!.uid;
                       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('usuarios').doc(uid).get();
 

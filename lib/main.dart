@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
 import 'home_screen.dart';
 import 'inicio_sesion.dart';
+import 'package:bookmet/admin_view.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +48,12 @@ class BookmetApp extends StatelessWidget {
           }
 
           if (snapshot.hasData) {
-            return HomeScreen();
+            final String? email = FirebaseAuth.instance.currentUser?.email;
+          if (email == 'prueba@correo.unimet.edu.ve') {
+              return const AdminView();
+            } else {
+              return HomeScreen(); // Se mantiene el HomeScreen para los usuarios normales
+            }
           }
 
           return const InicioSesion();
