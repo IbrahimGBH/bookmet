@@ -94,6 +94,9 @@ class TarjetaProducto extends StatelessWidget {
               FutureBuilder<bool>(
                 future: user != null ? Auth.instance.isAdmin(user.uid) : Future.value(false),
                 builder: (context, adminSnapshot) {
+                  if (adminSnapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox();
+                  }
                   if (adminSnapshot.data == true) return const SizedBox();
 
                   return Positioned(

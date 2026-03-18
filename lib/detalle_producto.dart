@@ -308,6 +308,10 @@ class DetalleProducto extends StatelessWidget {
               FutureBuilder<bool>(
                 future: Auth.instance.isAdmin(currentUserId ?? ""),
                 builder: (context, adminSnapshot) {
+                  if (adminSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
                   bool isAdmin = adminSnapshot.data ?? false;
 
                   if (esMiPublicacion || isAdmin) {

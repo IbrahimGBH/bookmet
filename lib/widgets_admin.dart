@@ -5,7 +5,6 @@ import 'package:bookmet/pantalla_tdia.dart';
 import 'package:bookmet/pantalla_mod_publicaciones.dart';
 import 'package:bookmet/pantalla_usuarios.dart';
 import 'package:bookmet/tarjeta_builder.dart';
-import 'package:bookmet/tarjeta_producto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/pantalla_gestionar_filtros.dart';
@@ -261,7 +260,7 @@ Widget ultimasPublicacionesModeracion() {
     stream: FirebaseFirestore.instance
         .collection('productos')
         .orderBy('fecha', descending: true)
-        .limit(3) 
+        .limit(8) 
         .snapshots(),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -277,7 +276,7 @@ Widget ultimasPublicacionesModeracion() {
 
       return TarjetaBuilder(
         filtro: [docs],
-        cantidadColumnas: 3, 
+        cantidadColumnas: 8, 
         tarjetaSize: 400,    
         smallVersion: true,  
         isScrollable: false, 

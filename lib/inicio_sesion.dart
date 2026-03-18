@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:bookmet/auth.dart';
 import 'package:bookmet/home_screen.dart';
-import 'package:bookmet/pantalla_catalogo.dart';
 
 // lo cambiamos a StatefulWidget para poder usar setState
 class InicioSesion extends StatefulWidget {

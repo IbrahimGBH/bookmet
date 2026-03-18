@@ -233,16 +233,50 @@ class _PantallaEditarProductoState extends State<PantallaEditarProducto> {
                       const SizedBox(height: 15),
 
                       // Selector de Categoría (Requerido)
-                      DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          label: Text.rich(TextSpan(children: [TextSpan(text: 'Categoría '), TextSpan(text: '*', style: TextStyle(color: Colors.red))])),
-                          border: OutlineInputBorder(),
-                        ),
-                        value: categoriaSeleccionada,
-                        items: ['Libros', 'Guías', 'Material Lab', 'Equipos', 'Otros']
-                            .map((label) => DropdownMenuItem(value: label, child: Text(label)))
-                            .toList(),
-                        onChanged: (value) => setState(() => categoriaSeleccionada = value),
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance.collection('categorias').snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+
+                          List<DropdownMenuItem<String>> opcionesCategoria = [];
+                          
+                          if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                            for (var doc in snapshot.data!.docs) {
+                              String nombreCat = doc['nombre'];
+                              opcionesCategoria.add(
+                                DropdownMenuItem(
+                                  value: nombreCat,
+                                  child: Text(nombreCat),
+                                ),
+                              );
+                            }
+                          } else {
+                            opcionesCategoria.add(
+                              const DropdownMenuItem(
+                                value: 'Sin categoría',
+                                child: Text('Sin categoría'),
+                              ),
+                            );
+                          }
+
+                          bool existe = opcionesCategoria.any((item) => item.value == categoriaSeleccionada);
+                          if (!existe) {
+                            categoriaSeleccionada = null; 
+                          }
+
+                          return DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              label: Text.rich(TextSpan(children: [TextSpan(text: 'Categoría '), TextSpan(text: '*', style: TextStyle(color: Colors.red))])),
+                              border: OutlineInputBorder(),
+                            ),
+                            value: categoriaSeleccionada,
+                            items: opcionesCategoria,
+                            onChanged: (value) => setState(() => categoriaSeleccionada = value),
+                            validator: (value) => value == null ? 'Seleccione una categoría' : null,
+                          );
+                        },
                       ),
                       const SizedBox(height: 20),
 
@@ -252,12 +286,38 @@ class _PantallaEditarProductoState extends State<PantallaEditarProducto> {
                         data: Theme.of(context).copyWith(
                           radioTheme: RadioThemeData(fillColor: WidgetStateProperty.all(const Color(0xFFC0834A))), 
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(child: RadioListTile<String>(title: const Text("Nuevo", style: TextStyle(fontSize: 12)), value: "Nuevo", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
-                            Expanded(child: RadioListTile<String>(title: const Text("Como nuevo", style: TextStyle(fontSize: 12)), value: "Como nuevo", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
-                            Expanded(child: RadioListTile<String>(title: const Text("Desgastado", style: TextStyle(fontSize: 12)), value: "Desgastado", groupValue: estadoSeleccionado, onChanged: (v) => setState(() => estadoSeleccionado = v!))),
-                          ],
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance.collection('condiciones').snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            
+                            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                              return const Text("No hay condiciones disponibles.", style: TextStyle(fontSize: 12));
+                            }
+
+                            return Wrap(
+                              spacing: 0,
+                              runSpacing: -10, 
+                              children: snapshot.data!.docs.map((doc) {
+                                String nombreCondicion = doc['nombre'];
+                                return SizedBox(
+                                  width: 120, 
+                                  child: RadioListTile<String>(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(
+                                      nombreCondicion,
+                                      style: const TextStyle(fontSize: 10),
+                                    ),
+                                    value: nombreCondicion,
+                                    groupValue: estadoSeleccionado,
+                                    onChanged: (v) => setState(() => estadoSeleccionado = v!),
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 10),

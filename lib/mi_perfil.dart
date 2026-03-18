@@ -354,6 +354,11 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
     builder: (context, snapshot) {
       if (!snapshot.hasData) return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()));
       
+      if (!snapshot.data!.exists || snapshot.data!.data() == null) {
+        return const SizedBox(
+          child: Center(child: Center(child: Text("No se encontraron transacciones"))));
+      }
+      
       var productoData = snapshot.data!.data() as Map<String, dynamic>;
 
       return Container(

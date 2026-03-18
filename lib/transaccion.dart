@@ -132,6 +132,18 @@ class Transaccion {
 
         await ffStore.collection('productos').doc(idProducto).delete();
 
+        // Eliminar de favoritos de todos los usuarios
+        var favoritosSnap = await ffStore
+            .collectionGroup('favoritos')
+            .where('id_producto', isEqualTo: idProducto)
+            .get();
+        
+        WriteBatch batch = ffStore.batch();
+        for (var doc in favoritosSnap.docs) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+
         await ffStore.collection('transacciones').doc(idTransaccion).update({
           'estado': 'finalizada',
           'fecha_confirmacion': Timestamp.now(),
