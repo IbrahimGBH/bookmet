@@ -60,8 +60,8 @@ class TarjetaProducto extends StatelessWidget {
           context: context,
           builder: (BuildContext context) {
             return DetalleProducto(
-              idProducto: idProducto, // NUEVO
-              vendedorId: vendedorId, // NUEVO
+              idProducto: idProducto,
+              vendedorId: vendedorId,
               titulo: titulo,
               autor: autor,
               precio: precio,
@@ -76,20 +76,35 @@ class TarjetaProducto extends StatelessWidget {
         children: [
           Stack(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Container(
-                  height: 250,
-                  width: double.infinity,
-                  color: Colors.grey[300],
-                  child: foto != ""
-                      ? Image.network(
-                        foto, 
-                        fit: BoxFit.cover,
-                        )
-                      : const Icon(Icons.book, size: 50, color: Colors.grey),
+              
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15), 
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.4), 
+                      spreadRadius: 2, 
+                      blurRadius: 8, 
+                      offset: const Offset(0, 4), 
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Container(
+                    height: 250,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: foto != ""
+                        ? Image.network(
+                            foto, 
+                            fit: BoxFit.cover,
+                          )
+                        : const Icon(Icons.book, size: 50, color: Colors.grey),
+                  ),
                 ),
               ),
+              
               
               FutureBuilder<bool>(
                 future: user != null ? Auth.instance.isAdmin(user.uid) : Future.value(false),

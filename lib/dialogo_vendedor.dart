@@ -245,76 +245,163 @@ class _VendedorDialogState extends State<VendedorDialog> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text("Comentarios de compradores"),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 400,
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('usuarios')
-                  .doc(widget.vendedorId)
-                  .collection('comentarios')
-                  .orderBy('fecha', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: Color(0xFFE5853B)));
-                }
-                
-                var docs = snapshot.data?.docs ?? [];
-                if (docs.isEmpty) return const Center(child: Text("Aún no hay comentarios."));
-
-                return ListView.builder(
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    var data = docs[index].data() as Map<String, dynamic>;
-                    int calificacion = data['calificacion'] ?? 0;
-                    String comentario = data['comentario'] ?? '';
-                    String autor = data['autor'] ?? 'Usuario'; 
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        leading: const CircleAvatar(backgroundColor: Color(0xFFFFDAB9), child: Icon(Icons.person, color: Colors.white)),
-                        title: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                           
-                            Text(
-                              autor, 
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)
-                            ),
-                            const SizedBox(height: 4),
-                            // Las estrellitas debajo del nombre
-                            Row(
-                              children: List.generate(5, (i) => Icon(
-                                i < calificacion ? Icons.star : Icons.star_border,
-                                size: 16,
-                                color: const Color(0xFFFFCD60),
-                              )),
-                            ),
-                          ],
-                        ),
-                        // El comentario se muestra como subtítulo
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 6.0),
-                          child: Text(comentario),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            
+            width: 500,
+            constraints: const BoxConstraints(maxHeight: 500), 
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3EDF7), 
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, 
+              children: [
+               
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.stars, color: Color(0xFFE5853B), size: 28),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          "Comentarios de compradores",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF333333),
+                          ),
                         ),
                       ),
-                    );
-                  },
-                );
-              },
+                    ],
+                  ),
+                ),
+
+                // --- LISTA DE COMENTARIOS ---
+                Expanded(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('usuarios')
+                        .doc(widget.vendedorId)
+                        .collection('comentarios')
+                        .orderBy('fecha', descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                            child: CircularProgressIndicator(color: Color(0xFFE5853B)));
+                      }
+
+                      var docs = snapshot.data?.docs ?? [];
+                      if (docs.isEmpty) {
+                        return const Center(child: Text("Aún no hay comentarios."));
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: docs.length,
+                        itemBuilder: (context, index) {
+                          var data = docs[index].data() as Map<String, dynamic>;
+                          int calificacion = data['calificacion'] ?? 0;
+                          String comentario = data['comentario'] ?? '';
+                          String autor = data['autor'] ?? 'Usuario Anónimo';
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Avatar
+                                  const CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Color(0xFFE0E0E0),
+                                    child: Icon(Icons.person, color: Colors.white, size: 24),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  // Contenido del comentario
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          autor,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: List.generate(
+                                              5,
+                                              (i) => Icon(
+                                                    i < calificacion
+                                                        ? Icons.star
+                                                        : Icons.star_border,
+                                                    size: 16,
+                                                    color: const Color(0xFFFFCD60),
+                                                  )),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          comentario,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+
+                // --- PIE / BOTÓN CERRAR ---
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE5853B),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      child: const Text("Cerrar", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cerrar", style: TextStyle(color: Color(0xFFE5853B))),
-            ),
-          ],
         );
       },
     );
