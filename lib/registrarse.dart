@@ -262,23 +262,29 @@ class _PagRegistroState extends State<PagRegistro> {
                         'admin': false,
                       });
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("¡Registrado en la nube!"), backgroundColor: Colors.green),
-                      );
+                    if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("¡Registrado con éxito!"), backgroundColor: Colors.green),
+        );
 
-                      Future.delayed(const Duration(seconds: 1), () {
-                        if (context.mounted) {
-                          Navigator.pop(context); 
-                        }
-                      });
+        // Pequeña espera de cortesía para que el servidor procese el timestamp
+        await Future.delayed(const Duration(milliseconds: 500));
 
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-                      );
-                    }
-                  }
-                }, 
+        if (mounted) {
+          Navigator.pop(context); // Cerramos la página
+        }
+      }
+
+    } catch (e) {
+      // Si Firebase Auth o Firestore dan error, lo atrapamos aquí
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+},
                 child: const Text("Registrarse", style: TextStyle(color: Colors.white)),
               ),
                 ],
