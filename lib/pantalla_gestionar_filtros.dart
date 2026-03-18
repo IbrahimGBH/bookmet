@@ -9,6 +9,7 @@ class PantallaGestionarFiltros extends StatefulWidget {
 }
 
 class _PantallaGestionarFiltrosState extends State<PantallaGestionarFiltros> {
+  final Color naranjaMetro = const Color(0xFFE5853B);
   final TextEditingController _categoriaController = TextEditingController();
   final TextEditingController _condicionController = TextEditingController();
 
@@ -52,7 +53,7 @@ class _PantallaGestionarFiltrosState extends State<PantallaGestionarFiltros> {
               ElevatedButton(
                 onPressed: () => _agregarFiltro(coleccion, controlador),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange, // Color de tu app
+                  backgroundColor: naranjaMetro, // Color de tu app
                   padding: const EdgeInsets.symmetric(vertical: 20),
                 ),
                 child: const Text('Agregar', style: TextStyle(color: Colors.white)),
@@ -101,7 +102,7 @@ class _PantallaGestionarFiltrosState extends State<PantallaGestionarFiltros> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Gestionar Filtros', style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.orange,
+          backgroundColor: naranjaMetro,
           iconTheme: const IconThemeData(color: Colors.white),
           bottom: const TabBar(
             labelColor: Colors.white,

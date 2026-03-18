@@ -1,4 +1,5 @@
 
+import 'package:bookmet/metricas_carreras.dart';
 import 'package:bookmet/pantalla_mod_publicaciones.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -142,20 +143,39 @@ class AdminView extends StatelessWidget {
                       Expanded(
                         flex: 2,
                         child: sectionContainer(
-                          title: "Métricas de Demanda Académica",
-                          child: Container(
-                            height: 250,
-                            decoration: BoxDecoration(
-                              image: const DecorationImage(
-                                image: NetworkImage('https://placeholder.com/graph'), // Placeholder
-                                fit: BoxFit.cover,
+                          title: "", // Dejamos el título vacío para manejarlo nosotros con el botón
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "Material por Carrera",
+                                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const MetricasCarreras()),
+                                      );
+                                    },
+                                    child: const Text("Ver más ->", style: TextStyle(color: Color(0xFFE5853B), fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
                               ),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: const Center(child: Text("Área de Gráfico Lineal")),
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                height: 250, 
+                                // Aquí llamamos al widget que crearemos en el otro archivo
+                                child: const GraficoGlobalCarreras(), 
+                              ),
+                            ],
                           ),
                         ),
                       ),
+
+
                       const SizedBox(width: 20),
                       //Gestión de Filtros
                       Expanded(
