@@ -355,8 +355,7 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
       if (!snapshot.hasData) return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()));
       
       if (!snapshot.data!.exists || snapshot.data!.data() == null) {
-        return const SizedBox(
-          child: Center(child: Center(child: Text("No se encontraron transacciones"))));
+        return const SizedBox();
       }
       
       var productoData = snapshot.data!.data() as Map<String, dynamic>;
@@ -392,7 +391,8 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
                   ),
                   const SizedBox(height: 5),
                   if (soyVendedor)
-                    Row(
+                    SizedBox()
+                    /*Row(
                       children: [
                         _botonAccion("Aceptar", const Color(0xFF6ABF97), () async {
                           // ACTUALIZAMOS EN FIREBASE PARA QUE DESAPAREZCA DE LA LISTA
@@ -410,7 +410,7 @@ Widget _buildFilaAccionSolicitud(QueryDocumentSnapshot<Map<String, dynamic>> tra
                           if (context.mounted) Navigator.pop(context);
                         }),
                       ],
-                    )
+                    )*/
                   else
                     const Text(
                       "Estado: Esperando respuesta",
