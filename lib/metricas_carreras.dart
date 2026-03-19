@@ -203,11 +203,31 @@ class GraficoGlobalCarreras extends StatelessWidget {
                   showTitles: true,
                   getTitlesWidget: (value, meta) {
                     int i = value.toInt();
-                    if (i >= 0 && i < lista.length) {
-                      String txt = lista[i].key;
-                      return Text(txt.length > 3 ? txt.substring(0,3).toUpperCase() : txt, style: const TextStyle(fontSize: 9));
-                    }
-                    return const Text("");
+                      if (i >= 0 && i < lista.length) {
+                        String carreraOriginal = lista[i].key; // Ej: "Ingeniería de Sistemas"
+                        String txt = carreraOriginal.toUpperCase();
+
+                        // Lógica para diferenciar ingenierías automáticamente
+                        if (txt.contains("INGENIERÍA") || txt.contains("INGENIERIA")) {
+                          // Tomamos la última palabra del nombre (Sistemas, Producción, etc.)
+                          List<String> palabras = txt.split(' ');
+                          String ultimaPalabra = palabras.last; 
+                          
+                          // Retornamos ING- seguido de la primera letra de esa última palabra
+                          txt = "ING-${ultimaPalabra[0]}"; 
+                        } else {
+                          // Para las demás carreras (Derecho, Economía) dejamos las 3 primeras letras
+                          txt = txt.length > 3 ? txt.substring(0, 3) : txt;
+                        }
+
+                        return SideTitleWidget(
+                          axisSide: meta.axisSide,
+                          space: 4,
+                          child: Text(txt, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                        );
+                      }
+                      return const Text("");
+
                   },
                 ),
               ),
@@ -228,7 +248,7 @@ class GraficoGlobalCarreras extends StatelessWidget {
     var prods = await FirebaseFirestore.instance.collection('productos').get();
     for (var d in prods.docs) {
       String uid = d.data()['vendedor_id']?.toString() ?? '';
-      if (uid.isNotEmpty) {
+      if (uid.isNotEmpty) { 
         if (!cache.containsKey(uid)) {
           var u = await FirebaseFirestore.instance.collection('usuarios').doc(uid).get();
           cache[uid] = u.data()?['carrera'] ?? 'Otras';
