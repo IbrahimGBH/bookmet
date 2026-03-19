@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:bookmet/tarjeta_builder.dart';
+import 'package:bookmet/viewmodel/tarjeta_builder.dart';
 
 class PantallaModPublicaciones extends StatefulWidget {
   const PantallaModPublicaciones({super.key});

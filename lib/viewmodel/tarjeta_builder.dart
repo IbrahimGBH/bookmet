@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:bookmet/tarjeta_producto.dart';
+import 'package:bookmet/viewmodel/tarjeta_producto.dart';
 
 class TarjetaBuilder extends StatelessWidget {
   final List<List<QueryDocumentSnapshot<Map<String, dynamic>>>> filtro;

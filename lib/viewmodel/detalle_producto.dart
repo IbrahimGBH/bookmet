@@ -1,7 +1,7 @@
-import 'package:bookmet/auth.dart';
-import 'package:bookmet/notificacion.dart';
-import 'package:bookmet/dialogo_transaccion.dart';
-import 'package:bookmet/dialogo_vendedor.dart';
+import 'package:bookmet/model/auth.dart';
+import 'package:bookmet/viewmodel/notificacion.dart';
+import 'package:bookmet/viewmodel/dialogo_transaccion.dart';
+import 'package:bookmet/viewmodel/dialogo_vendedor.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

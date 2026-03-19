@@ -1,5 +1,5 @@
-import 'package:bookmet/auth.dart';
-import 'package:bookmet/home_screen.dart';
+import 'package:bookmet/model/auth.dart';
+import 'package:bookmet/view/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';

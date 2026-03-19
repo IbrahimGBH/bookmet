@@ -1,12 +1,12 @@
-import 'package:bookmet/dialogo_favoritos.dart';
-import 'package:bookmet/editar_perfil.dart';
-import 'package:bookmet/mi_perfil.dart';
-import 'package:bookmet/pantalla_catalogo.dart';
+import 'package:bookmet/viewmodel/dialogo_favoritos.dart';
+import 'package:bookmet/viewmodel/editar_perfil.dart';
+import 'package:bookmet/viewmodel/mi_perfil.dart';
+import 'package:bookmet/view/pantalla_catalogo.dart';
 import 'package:flutter/material.dart';
-import 'package:bookmet/auth.dart';
-import 'package:bookmet/registrarse.dart';
-import 'package:bookmet/inicio_sesion.dart';
-import 'package:bookmet/crear_producto.dart';
+import 'package:bookmet/model/auth.dart';
+import 'package:bookmet/view/registrarse.dart';
+import 'package:bookmet/view/inicio_sesion.dart';
+import 'package:bookmet/viewmodel/crear_producto.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});

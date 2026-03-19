@@ -1,9 +1,9 @@
-import 'package:bookmet/editar_perfil.dart';
+import 'package:bookmet/viewmodel/editar_perfil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:bookmet/auth.dart';
-import 'package:bookmet/tarjeta_builder.dart';
-import 'transaccion.dart';
+import 'package:bookmet/model/auth.dart';
+import 'package:bookmet/viewmodel/tarjeta_builder.dart';
+import 'package:bookmet/model/transaccion.dart';
 
 
 class MiPerfil extends StatefulWidget {

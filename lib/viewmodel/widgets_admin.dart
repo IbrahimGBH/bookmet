@@ -1,13 +1,13 @@
 
-import 'package:bookmet/gestion_filtros.dart';
-import 'package:bookmet/gestion_usuarios.dart';
-import 'package:bookmet/pantalla_tdia.dart';
-import 'package:bookmet/pantalla_mod_publicaciones.dart';
-import 'package:bookmet/pantalla_usuarios.dart';
-import 'package:bookmet/tarjeta_builder.dart';
+import 'package:bookmet/viewmodel/gestion_filtros.dart';
+import 'package:bookmet/viewmodel/gestion_usuarios.dart';
+import 'package:bookmet/view/pantalla_tdia.dart';
+import 'package:bookmet/view/pantalla_mod_publicaciones.dart';
+import 'package:bookmet/view/pantalla_usuarios.dart';
+import 'package:bookmet/viewmodel/tarjeta_builder.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:bookmet/pantalla_gestionar_filtros.dart';
+import 'package:bookmet/view/pantalla_gestionar_filtros.dart';
 
 
 

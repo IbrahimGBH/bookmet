@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:bookmet/auth.dart';
-import 'package:bookmet/notificacion.dart';
+import 'package:bookmet/model/auth.dart';
+import 'package:bookmet/viewmodel/notificacion.dart';
 
 class Transaccion {
   Transaccion._internal();

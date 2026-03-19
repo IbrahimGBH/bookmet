@@ -1,7 +1,7 @@
-import 'package:bookmet/auth.dart';
+import 'package:bookmet/model/auth.dart';
 import 'package:flutter/material.dart';
-import 'package:bookmet/transaccion.dart';
-import 'package:bookmet/dialogo_calificacion.dart';
+import 'package:bookmet/model/transaccion.dart';
+import 'package:bookmet/viewmodel/dialogo_calificacion.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:bookmet/detalle_producto.dart';
+import 'package:bookmet/viewmodel/detalle_producto.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:bookmet/auth.dart';  
+import 'package:bookmet/model/auth.dart';  
 
 class TarjetaProducto extends StatelessWidget {
   final String idProducto; // NUEVO

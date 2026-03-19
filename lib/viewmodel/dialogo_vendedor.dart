@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:bookmet/tarjeta_builder.dart';
+import 'package:bookmet/viewmodel/tarjeta_builder.dart';
 
 class VendedorDialog extends StatefulWidget {
   final String vendedorId;

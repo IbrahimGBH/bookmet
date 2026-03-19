@@ -1,5 +1,5 @@
-import 'package:bookmet/admin_view.dart';
-import 'package:bookmet/home_screen.dart';
+import 'package:bookmet/view/admin_view.dart';
+import 'package:bookmet/view/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

@@ -1,14 +1,14 @@
-import 'package:bookmet/home_screen.dart';
-import 'package:bookmet/tarjeta_builder.dart';
+import 'package:bookmet/view/home_screen.dart';
+import 'package:bookmet/viewmodel/tarjeta_builder.dart';
 import 'package:flutter/material.dart';
-import 'package:bookmet/crear_producto.dart';
-import 'package:bookmet/editar_perfil.dart';
+import 'package:bookmet/viewmodel/crear_producto.dart';
+import 'package:bookmet/viewmodel/editar_perfil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; 
-import 'package:bookmet/auth.dart';
-import 'package:bookmet/mi_perfil.dart';
-import 'package:bookmet/dialogo_favoritos.dart';
+import 'package:bookmet/model/auth.dart';
+import 'package:bookmet/viewmodel/mi_perfil.dart';
+import 'package:bookmet/viewmodel/dialogo_favoritos.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:bookmet/notificacion.dart';
+import 'package:bookmet/viewmodel/notificacion.dart';
 
 class PantallaCatalogo extends StatefulWidget {
   const PantallaCatalogo({super.key});
